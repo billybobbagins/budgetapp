@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<title>Weekly Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F6F4EF;
+  --bg-alt:#EFEBE2;
+  --card:#FFFFFF;
+  --border:#E4DFD3;
+  --border-mid:#D6CFBE;
+  --ink:#22261F;
+  --ink-mid:#5B5C4F;
+  --ink-faint:#8C8C7C;
+  --accent:#1F8A70;
+  --accent-dim:#166952;
+  --accent-light:#E4F3EE;
+  --accent-text:#166952;
+  --neg:#C4543A;
+  --neg-light:#FBEAE5;
+  --neg-text:#A5432C;
+  --warn:#B98A2B;
+  --warn-bg:#FBF1DD;
+  --radius:10px;
+  --radius-lg:16px;
+  --header:58px;
+  --serif:'Fraunces',serif;
+  --sans:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+button,input,select{font-family:var(--sans)}
+
+#offline-banner{display:none;align-items:center;gap:8px;background:var(--warn-bg);border-bottom:1.5px solid var(--warn);color:#7a5a10;padding:7px 1rem;font-size:0.78rem;position:relative;z-index:20}
+#offline-banner.show{display:flex}
+#offline-banner .dot{width:6px;height:6px;border-radius:50%;background:var(--warn);flex-shrink:0}
+#offline-banner-text{flex:1}
+#sync-now-btn{margin-left:auto;background:var(--warn);color:#fff;border:none;padding:3px 10px;border-radius:5px;font-size:0.72rem;cursor:pointer}
+
+header{height:var(--header);background:var(--ink);display:flex;align-items:center;padding:0 1rem;gap:0.6rem;position:sticky;top:0;z-index:30}
+.logo{font-family:var(--serif);font-size:1.2rem;color:#F6F4EF;font-weight:600;flex:1}
+.logo em{font-style:italic;color:#8FD9C4}
+.hbtn{background:none;border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.8);width:34px;height:34px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+.hbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#sync-icon{transition:transform .25s}
+.hbtn.syncing #sync-icon{animation:spin .8s linear infinite}
+.hbtn.sync-err #sync-icon{stroke:#E28169}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.app{max-width:640px;margin:0 auto;padding:1.1rem 1rem 4rem}
+
+/* summary */
+.summary{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.2rem;margin-bottom:1.1rem;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.summary-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.15rem}
+.summary-label{font-size:.72rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.summary-value{font-family:var(--serif);font-size:1.9rem;font-weight:600}
+.summary-value.neg{color:var(--neg-text)}
+.summary-value.pos{color:var(--accent-text)}
+.summary-sub{font-size:.82rem;color:var(--ink-mid);margin-top:.3rem}
+.range-toggle{display:flex;gap:3px}
+.range-btn{background:var(--bg-alt);border:1px solid var(--border);color:var(--ink-mid);font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer}
+.range-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.spark{margin-top:.7rem;height:86px;width:100%}
+.legend{display:flex;gap:14px;margin-top:.4rem;font-size:.68rem;color:var(--ink-faint)}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* toolbar */
+.toolbar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.tbtn{background:var(--card);border:1px solid var(--border);color:var(--ink-mid);padding:.5rem .85rem;border-radius:var(--radius);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600}
+.tbtn:hover{border-color:var(--border-mid);color:var(--ink)}
+.tbtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.tbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tbtn.primary:hover{background:var(--accent-dim)}
+
+/* week cards */
+.week{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:.7rem;overflow:hidden}
+.week.current{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.week-head{display:flex;align-items:center;gap:.7rem;padding:.85rem 1rem;cursor:pointer;user-select:none}
+.week-dates{flex:1;min-width:0}
+.week-range{font-size:.92rem;font-weight:700}
+.week-badge{display:inline-block;font-size:.65rem;font-weight:700;background:var(--accent-light);color:var(--accent-text);padding:1px 7px;border-radius:8px;margin-left:6px;vertical-align:middle;letter-spacing:.02em}
+.week-nums{display:flex;gap:1rem;align-items:baseline}
+.week-num{text-align:right}
+.week-num .n{font-weight:700;font-size:.95rem;font-family:var(--serif)}
+.week-num .l{font-size:.63rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+.week-num.neg .n{color:var(--neg-text)}
+.week-num.pos .n{color:var(--accent-text)}
+.chev{width:14px;height:14px;stroke:var(--ink-faint);fill:none;stroke-width:2;stroke-linecap:round;transition:transform .15s;flex-shrink:0}
+.week.open .chev{transform:rotate(180deg)}
+.week-body{display:none;border-top:1px solid var(--border);padding:.9rem 1rem 1.1rem}
+.week.open .week-body{display:block}
+
+.line-group-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);font-weight:800;margin:.8rem 0 .4rem}
+.cal-nav-btn{background:var(--bg-alt);border:1px solid var(--border);color:var(--ink);width:32px;height:32px;border-radius:8px;font-size:1.1rem;cursor:pointer;flex-shrink:0;line-height:1}
+.cal-nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.cal-nav-btn:hover:not(:disabled){background:var(--accent-light);color:var(--accent-text);border-color:var(--accent)}
+.line-group-title:first-child{margin-top:0}
+.line{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;font-size:.86rem}
+.line-name{flex:1;min-width:0}
+.line-name .tag{font-size:.68rem;color:var(--ink-faint);display:block}
+.line-amt-wrap{display:flex;align-items:center;gap:4px}
+.line-amt{width:76px;text-align:right;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 5px;font-weight:600;font-size:.86rem;font-family:var(--sans)}
+.line-amt:focus{border-color:var(--border-mid);background:var(--bg)}
+.line-amt.income{color:var(--accent-text)}
+.line-amt.expense{color:var(--ink)}
+.line-budgeted{font-size:.68rem;color:var(--ink-faint);white-space:nowrap}
+.line-x{background:none;border:none;color:var(--ink-faint);cursor:pointer;width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:5px}
+.line-x:hover{background:var(--neg-light);color:var(--neg-text)}
+.line-x svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.line-skip{opacity:.4;text-decoration:line-through}
+
+.oneoff-row{display:flex;gap:.4rem;margin-top:.6rem}
+.oneoff-row input{flex:1;border:1px solid var(--border);border-radius:7px;padding:.4rem .6rem;font-size:.82rem;background:var(--bg)}
+.oneoff-row input[type=number]{flex:0 0 90px}
+.oneoff-row select{flex:0 0 84px;border:1px solid var(--border);border-radius:7px;padding:.4rem .3rem;font-size:.78rem;background:var(--bg)}
+.oneoff-add{flex:0 0 auto;background:var(--ink);color:#fff;border:none;border-radius:7px;padding:.4rem .7rem;font-size:.8rem;cursor:pointer;font-weight:600}
+
+.week-totals{display:flex;justify-content:space-between;margin-top:.9rem;padding-top:.7rem;border-top:1px dashed var(--border-mid);font-size:.86rem}
+.week-totals .t{text-align:center;flex:1}
+.week-totals .t .n{font-weight:700;font-family:var(--serif);font-size:1.02rem}
+.week-totals .t .l{font-size:.65rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+
+.loadmore{display:block;width:100%;background:var(--card);border:1px dashed var(--border-mid);color:var(--ink-mid);padding:.7rem;border-radius:var(--radius);cursor:pointer;font-size:.84rem;font-weight:600;margin-top:.3rem}
+.loadmore:hover{border-color:var(--accent);color:var(--accent-text)}
+
+/* modals */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(20,18,14,.45);z-index:200;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+@media(min-width:640px){.modal-bg{align-items:center}}
+.modal{background:var(--card);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:1.2rem}
+@media(min-width:640px){.modal{border-radius:16px}}
+.modal-head{display:flex;align-items:center;margin-bottom:1rem}
+.modal-title{font-family:var(--serif);font-size:1.15rem;font-weight:600;flex:1}
+.modal-close{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:1.3rem;line-height:1;padding:2px 6px}
+.field{margin-bottom:.85rem}
+.field label{display:block;font-size:.76rem;font-weight:700;color:var(--ink-mid);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.03em}
+.field input,.field select{width:100%;border:1px solid var(--border);border-radius:8px;padding:.55rem .7rem;font-size:.88rem;background:var(--bg);color:var(--ink)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field-row{display:flex;gap:.6rem}
+.field-row .field{flex:1}
+.field-note{font-size:.72rem;color:var(--ink-faint);margin-top:.3rem}
+.checkline{display:flex;align-items:center;gap:.5rem;font-size:.85rem;margin-bottom:.85rem}
+.modal-actions{display:flex;gap:.6rem;margin-top:1.1rem}
+.btn{flex:1;border:none;border-radius:9px;padding:.65rem;font-size:.87rem;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-dim)}
+.btn.ghost{background:var(--bg-alt);color:var(--ink-mid)}
+.btn.danger{background:var(--neg-light);color:var(--neg-text)}
+
+.rec-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--border)}
+.rec-item:last-child{border-bottom:none}
+.rec-main{flex:1;min-width:0}
+.rec-name{font-weight:700;font-size:.88rem}
+.rec-meta{font-size:.72rem;color:var(--ink-faint);margin-top:1px}
+.rec-amt{font-weight:700;font-size:.88rem;white-space:nowrap}
+.rec-amt.income{color:var(--accent-text)}
+.rec-edit-btn{background:none;border:1px solid var(--border);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-mid);flex-shrink:0}
+.rec-edit-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;padding:.6rem 1rem;border-radius:9px;font-size:.83rem;opacity:0;pointer-events:none;transition:all .2s;z-index:400;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.empty{text-align:center;padding:2rem 1rem;color:var(--ink-faint);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<div id="offline-banner">
+  <span class="dot"></span>
+  <span id="offline-banner-text">You're offline — changes are saved locally and will sync later</span>
+  <button id="sync-now-btn" onclick="manualSync()">Sync now</button>
+</div>
+
+<header>
+  <div class="logo">Weekly <em>Budget</em></div>
+  <button class="hbtn" onclick="manualSync()" title="Sync now">
+    <svg viewBox="0 0 24 24" id="sync-icon"><path d="M17 2l4 4-4 4M3 12v-2a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v2a4 4 0 0 1-4 4H3"/></svg>
+  </button>
+  <button class="hbtn" onclick="openRecurring()" title="Recurring items">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+  </button>
+  <button class="hbtn" onclick="openSettings()" title="Settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.73.86"/></svg>
+  </button>
+</header>
+
+<div class="app">
+  <div class="summary">
+    <div class="summary-top">
+      <span class="summary-label">Savings</span>
+      <div class="range-toggle" id="range-toggle"></div>
+    </div>
+    <div class="summary-value" id="cur-week-savings">$0</div>
+    <div class="summary-sub" id="cur-week-sub">—</div>
+    <svg class="spark" id="spark" viewBox="0 0 600 92" preserveAspectRatio="none"></svg>
+    <div class="legend"><span><i style="background:#1F8A70"></i>Dated income</span><span><i style="background:#C4543A"></i>Dated expense</span></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="tbtn primary" onclick="openAddOneOff()">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add one-off
+    </button>
+    <button class="tbtn" onclick="openCalendar()">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Calendar
+    </button>
+  </div>
+
+  <div id="weeks"></div>
+  <button class="loadmore" id="loadmore-btn" onclick="loadMoreWeeks()">Show more weeks</button>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Settings</div><button class="modal-close" onclick="closeModal('settings-modal')">&times;</button></div>
+
+    <div class="field">
+      <label>GitHub username</label>
+      <input id="set-owner" placeholder="e.g. billybobbagins">
+    </div>
+    <div class="field">
+      <label>Repository name</label>
+      <input id="set-repo" placeholder="e.g. budget">
+    </div>
+    <div class="field">
+      <label>Access token (fine-grained, Contents read/write)</label>
+      <input id="set-token" type="password" placeholder="github_pat_...">
+      <div class="field-note">Stored only in this browser's local storage — never written into this file.</div>
+    </div>
+    <div class="field-note" style="margin-bottom:.85rem">Budget starts Monday 17 Aug 2026 (Sydney time) — fixed, and not editable here. To set your actual starting balance, edit the "Savings" line directly in Week 1.</div>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="saveSettings()">Save & sync</button>
+    </div>
+
+    <div class="field" style="margin-top:1.3rem">
+      <label>Backup</label>
+      <div class="modal-actions" style="margin-top:0">
+        <button class="btn ghost" onclick="exportJSON()">Export .json</button>
+        <button class="btn ghost" onclick="document.getElementById('import-file').click()">Import .json</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importJSON(event)">
+    </div>
+  </div>
+</div>
+
+<!-- RECURRING MODAL -->
+<div class="modal-bg" id="recurring-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Recurring items</div><button class="modal-close" onclick="closeModal('recurring-modal')">&times;</button></div>
+    <div id="rec-list"></div>
+    <div class="modal-actions"><button class="btn primary" onclick="openRecItemForm()">Add recurring item</button></div>
+  </div>
+</div>
+
+<!-- RECURRING ITEM EDIT MODAL -->
+<div class="modal-bg" id="recitem-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" id="recitem-title">Add item</div><button class="modal-close" onclick="closeModal('recitem-modal')">&times;</button></div>
+    <input type="hidden" id="ri-id">
+    <div class="field"><label>Name</label><input id="ri-name" placeholder="e.g. Rent"></div>
+    <div class="field-row">
+      <div class="field">
+        <label>Type</label>
+        <select id="ri-kind"><option value="expense">Expense</option><option value="income">Income</option></select>
+      </div>
+      <div class="field">
+        <label>Cadence</label>
+        <select id="ri-cadence">
+          <option value="weekly">Weekly</option>
+          <option value="fortnightly">Fortnightly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Amount</label><input id="ri-amount" type="number" step="0.01"></div>
+      <div class="field"><label>First occurs</label><input id="ri-anchor" type="date"></div>
+    </div>
+    <div class="checkline">
+      <input type="checkbox" id="ri-variable"> Variable (budget target — actual can differ each week)
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" id="ri-delete-btn" onclick="deleteRecItem()">Delete</button>
+      <button class="btn primary" onclick="saveRecItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR MODAL -->
+<div class="modal-bg" id="calendar-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <button class="cal-nav-btn" onclick="calShift(-1)">‹</button>
+      <div class="modal-title" id="cal-title" style="text-align:center">Month</div>
+      <button class="cal-nav-btn" onclick="calShift(1)">›</button>
+      <button class="modal-close" onclick="closeModal('calendar-modal')">&times;</button>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:.72rem"></div>
+    <div id="cal-day-detail" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<!-- ADD ONE-OFF MODAL -->
+<div class="modal-bg" id="addoneoff-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Add one-off</div><button class="modal-close" onclick="closeModal('addoneoff-modal')">&times;</button></div>
+    <div class="field"><label>Name</label><input id="aoo-name" placeholder="e.g. Concert tickets"></div>
+    <div class="field-row">
+      <div class="field"><label>Type</label><select id="aoo-kind"><option value="expense">Expense</option><option value="income">Income</option></select></div>
+      <div class="field"><label>Amount</label><input id="aoo-amt" type="number" step="0.01"></div>
+    </div>
+    <div class="field">
+      <label>Assign to</label>
+      <div class="checkline" style="gap:1rem;margin-bottom:.5rem">
+        <label style="display:flex;align-items:center;gap:5px;font-weight:400;cursor:pointer"><input type="radio" name="aoo-mode" value="week" checked onchange="aooModeChange()"> A week</label>
+        <label style="display:flex;align-items:center;gap:5px;font-weight:400;cursor:pointer"><input type="radio" name="aoo-mode" value="date" onchange="aooModeChange()"> A specific date</label>
+      </div>
+      <select id="aoo-week"></select>
+      <input id="aoo-date" type="date" style="display:none">
+    </div>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="addOneOffGlobal()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ───────────────────────── CONFIG ─────────────────────────
+const PATH = 'budget-data.json';
+const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is still evolving
+let OWNER = localStorage.getItem('budget_gh_owner') || 'billybobbagins';
+let REPO  = localStorage.getItem('budget_gh_repo')  || 'budget';
+let ghToken = localStorage.getItem('budget_gh_token') || '';
+let currentSha = localStorage.getItem('budget_gh_sha') || null;
+
+let isOnline = navigator.onLine;
+let pendingSync = false;
+let syncTimer = null;
+
+// ───────────────────────── STATE ─────────────────────────
+function rnd(min, max, step){
+  const v = min + Math.random()*(max-min);
+  return Math.round(v/step)*step;
+}
+function defaultState(){
+  const start = '2026-08-17'; // hard-coded: Monday, 17 Aug 2026, Australia/Sydney — not user-editable, see Settings
+  return {
+    updatedAt: Date.now(),
+    settings: {
+      startDate: start,
+      initialSavings: 0,
+      weeksToShow: 10,
+      chartRange: 12
+    },
+    recurring: [
+      mkRec('Salary (example)', 'income', 'fortnightly', rnd(1500,3000,50), false, start),
+      mkRec('Side income (example)', 'income', 'weekly', rnd(30,120,10), false, start),
+      mkRec('Rent (example)', 'expense', 'weekly', rnd(280,550,10), false, start),
+      mkRec('Groceries (example)', 'expense', 'weekly', rnd(90,220,5), true, start),
+      mkRec('Entertainment (example)', 'expense', 'weekly', rnd(40,150,5), true, start),
+      mkRec('Phone plan (example)', 'expense', 'monthly', rnd(30,70,5), false, start),
+      mkRec('Subscriptions (example)', 'expense', 'monthly', rnd(15,60,5), true, start),
+      mkRec('Insurance (example)', 'expense', 'quarterly', rnd(150,450,10), true, start)
+    ],
+    weeks: {}
+  };
+}
+function mkRec(name, kind, cadence, amount, variable, anchorDate){
+  return {id: 'r'+Math.random().toString(36).slice(2,9), name, kind, cadence, amount:+amount, variable:!!variable, anchorDate, active:true};
+}
+function weekBucket(idx){
+  if(!state.weeks[idx]) state.weeks[idx] = {oneOffs:[], overrides:{}, skipped:[]};
+  return state.weeks[idx];
+}
+
+let state = loadLocal() || defaultState();
+
+function loadLocal(){
+  try{ const raw = localStorage.getItem('budget_state'); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function saveLocal(){
+  state.updatedAt = Date.now();
+  localStorage.setItem('budget_state', JSON.stringify(state));
+}
+function persist(){
+  saveLocal();
+  render();
+  scheduleSync();
+}
+
+// ───────────────────────── DATE UTILS ─────────────────────────
+// Note: dates are handled as local calendar dates throughout (never UTC-shifted),
+// and "today" is always resolved in Australia/Sydney time regardless of device timezone.
+function fmtISO(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function nowSydney(){
+  const parts = new Intl.DateTimeFormat('en-CA', {timeZone:'Australia/Sydney', year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(new Date());
+  const y = +parts.find(p=>p.type==='year').value;
+  const m = +parts.find(p=>p.type==='month').value;
+  const d = +parts.find(p=>p.type==='day').value;
+  return new Date(y, m-1, d);
+}
+function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y, m-1, d); }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function addMonths(d,n){ const r=new Date(d); r.setMonth(r.getMonth()+n); return r; }
+function mondayOnOrBefore(d){ const r=new Date(d); const day=r.getDay(); const diff=(day===0?6:day-1); r.setDate(r.getDate()-diff); r.setHours(0,0,0,0); return r; }
+function fmtRange(start,end){
+  const opts={month:'short',day:'numeric'};
+  const sameMonth = start.getMonth()===end.getMonth();
+  return `${start.toLocaleDateString('en-AU',opts)} – ${end.toLocaleDateString('en-AU', sameMonth?{day:'numeric'}:opts)}`;
+}
+function fmtMoney(n){
+  const neg = n<0;
+  const v = Math.abs(Math.round(n));
+  return (neg?'-$':'$')+v.toLocaleString('en-AU');
+}
+
+// ───────────────────────── OCCURRENCE LOGIC ─────────────────────────
+function occursInWeek(item, weekStart, weekEnd){
+  return occurrenceDatesInRange(item, weekStart, weekEnd).length > 0;
+}
+
+function avgActual(itemId){
+  const vals=[];
+  Object.values(state.weeks).forEach(w=>{
+    if(w.overrides && w.overrides[itemId]!=null) vals.push(w.overrides[itemId]);
+  });
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+
+function todayWeekIndex(){
+  const start = parseISO(state.settings.startDate);
+  const diff = Math.floor((mondayOnOrBefore(nowSydney()) - start)/(7*86400000));
+  return diff;
+}
+
+// ───────────────────────── COMPUTE ─────────────────────────
+function computeWeek(idx, priorSavings){
+  const start = parseISO(state.settings.startDate);
+  const weekStart = addDays(start, idx*7);
+  const weekEnd = addDays(weekStart,6);
+  const bucket = weekBucket(idx);
+  const curIdx = todayWeekIndex();
+
+  const incomeLines=[], expenseLines=[];
+
+  state.recurring.forEach(item=>{
+    if(!item.active) return;
+    if(bucket.skipped.includes(item.id)) return;
+    if(!occursInWeek(item, weekStart, weekEnd)) return;
+    let amount = item.amount;
+    const ov = bucket.overrides[item.id];
+    if(item.variable){
+      if(ov!=null) amount = ov;
+      else if(idx > curIdx){ const a = avgActual(item.id); if(a!=null) amount = a; }
+    } else if(ov!=null){
+      amount = ov;
+    }
+    const line = {id:item.id, name:item.name, amount, variable:item.variable, budgeted:item.amount, recurring:true};
+    (item.kind==='income'?incomeLines:expenseLines).push(line);
+  });
+
+  bucket.oneOffs.forEach(o=>{
+    const line = {id:o.id, name:o.name, amount:o.amount, recurring:false, date:o.date||null};
+    (o.kind==='income'?incomeLines:expenseLines).push(line);
+  });
+
+  const rolloverOv = bucket.overrides['_rollover'];
+  const rolloverAmount = rolloverOv!=null ? rolloverOv : priorSavings;
+  incomeLines.push({id:'_rollover', name: idx===0?'Savings':'Savings (rollover)', amount:rolloverAmount, recurring:true, rollover:true});
+
+  const incomeTotal = incomeLines.reduce((a,l)=>a+l.amount,0);
+  const expenseTotal = expenseLines.reduce((a,l)=>a+l.amount,0);
+  const savings = incomeTotal - expenseTotal;
+
+  return {idx, weekStart, weekEnd, incomeLines, expenseLines, incomeTotal, expenseTotal, savings, isCurrent: idx===curIdx};
+}
+
+function computeAll(n){
+  const out=[];
+  let savings = state.settings.initialSavings;
+  for(let i=0;i<n;i++){
+    const w = computeWeek(i, savings);
+    out.push(w);
+    savings = w.savings;
+  }
+  return out;
+}
+
+// ───────────────────────── RENDER ─────────────────────────
+let openWeeks = new Set();
+const RANGE_OPTIONS = [{label:'1W', n:1}, {label:'4W', n:4}, {label:'12W', n:12}, {label:'6MO', n:MAX_WEEKS}];
+
+function render(){
+  const n = state.settings.weeksToShow;
+  const weeks = computeAll(n);
+
+  // ── chart / summary period (independent of the week list below) ──
+  const chartRange = state.settings.chartRange || 12;
+  const chartStart = Math.max(0, todayWeekIndex());
+  const chartEnd = Math.min(MAX_WEEKS-1, chartStart + chartRange - 1);
+  const fullForChart = computeAll(chartEnd+1);
+  const rangeWeeks = fullForChart.slice(chartStart, chartEnd+1);
+  const first = rangeWeeks[0], last = rangeWeeks[rangeWeeks.length-1];
+  const rolloverAtStart = first.incomeLines.find(l=>l.id==='_rollover').amount;
+  const accrued = last.savings - rolloverAtStart;
+  const totalIncome = rangeWeeks.reduce((a,w)=>a + w.incomeTotal - w.incomeLines.find(l=>l.id==='_rollover').amount, 0);
+  const totalExpenses = rangeWeeks.reduce((a,w)=>a + w.expenseTotal, 0);
+
+  const sv = document.getElementById('cur-week-savings');
+  sv.textContent = fmtMoney(accrued);
+  sv.className = 'summary-value ' + (accrued<0?'neg':'pos');
+  document.getElementById('cur-week-sub').textContent =
+    `${fmtRange(first.weekStart,last.weekEnd)} · Income ${fmtMoney(totalIncome)} · Expenses ${fmtMoney(totalExpenses)}`;
+
+  const rt = document.getElementById('range-toggle');
+  rt.innerHTML = RANGE_OPTIONS.map(o=>`<button class="range-btn${chartRange===o.n?' active':''}" onclick="setChartRange(${o.n})">${o.label}</button>`).join('');
+
+  renderSpark(rangeWeeks);
+
+  const container = document.getElementById('weeks');
+  container.innerHTML = '';
+  weeks.forEach(w=>container.appendChild(renderWeekCard(w)));
+
+  const lm = document.getElementById('loadmore-btn');
+  lm.style.display = state.settings.weeksToShow >= MAX_WEEKS ? 'none' : '';
+
+  syncDotUpdate();
+}
+function setChartRange(n){
+  state.settings.chartRange = n;
+  persist();
+}
+
+// "Nice" axis ticks (d3-style) so the y-axis scales sensibly instead of just showing min/max
+function niceNum(range, round){
+  const exp = Math.floor(Math.log10(range||1));
+  const frac = (range||1)/Math.pow(10,exp);
+  let nf;
+  if(round){ nf = frac<1.5?1:frac<3?2:frac<7?5:10; }
+  else { nf = frac<=1?1:frac<=2?2:frac<=5?5:10; }
+  return nf*Math.pow(10,exp);
+}
+function niceTicks(min, max, targetCount){
+  if(min===max){ min-=10; max+=10; }
+  const rawRange = niceNum(max-min, false);
+  const step = niceNum(rawRange/(targetCount-1), true);
+  const niceMin = Math.floor(min/step)*step;
+  const niceMax = Math.ceil(max/step)*step;
+  const ticks = [];
+  for(let v=niceMin; v<=niceMax+1e-6; v+=step) ticks.push(Math.round(v));
+  return {ticks, niceMin, niceMax};
+}
+
+function renderSpark(weeks){
+  const svg = document.getElementById('spark');
+  const vals = weeks.map(w=>w.savings);
+  const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
+  const {ticks, niceMin, niceMax} = niceTicks(rawMin, rawMax, 4);
+  const range = (niceMax-niceMin)||1;
+  const W=600,H=92, padL=50, padB=18, padT=8;
+  const plotW = W-padL, plotH = H-padB-padT;
+  const n = weeks.length;
+  const xFor = fracIdx => padL + (n>1 ? (fracIdx/(n-1))*plotW : 0);
+  const yFor = v => padT + plotH - ((v-niceMin)/range)*plotH;
+
+  const pts = vals.map((v,i)=>`${xFor(i)},${yFor(v)}`).join(' ');
+  const dots = vals.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yFor(v)}" r="2.2" fill="#1F8A70"/>`).join('');
+
+  const tickIdxs = n>=3 ? [0, Math.floor((n-1)/2), n-1] : weeks.map((_,i)=>i);
+  const xTicks = tickIdxs.map(i=>`<text x="${xFor(i)}" y="${H-3}" font-size="9" fill="#8C8C7C" text-anchor="${i===0?'start':i===n-1?'end':'middle'}">${weeks[i].weekStart.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</text>`).join('');
+
+  const yGrid = ticks.map(t=>{
+    const y = yFor(t);
+    const isZero = t===0;
+    return `<line x1="${padL}" y1="${y}" x2="${W}" y2="${y}" stroke="${isZero?'#B8AF9A':'#E9E4D8'}" stroke-width="1" ${isZero?'':'stroke-dasharray="2,3"'}/>
+      <text x="${padL-6}" y="${y+3}" font-size="9" fill="#8C8C7C" text-anchor="end">${fmtMoney(t)}</text>`;
+  }).join('');
+
+  let markers = '';
+  weeks.forEach((w,i)=>{
+    [['income',w.incomeLines,'#1F8A70'],['expense',w.expenseLines,'#C4543A']].forEach(([kind,lines,color])=>{
+      lines.forEach(l=>{
+        if(!l.date) return;
+        const d = parseISO(l.date);
+        const fracIdx = Math.min(n-1, i + Math.max(0,(d-w.weekStart)/86400000)/7);
+        const x = xFor(fracIdx), y = yFor(w.savings);
+        markers += `<circle cx="${x}" cy="${y}" r="3.4" fill="${color}" stroke="#fff" stroke-width="1"><title>${esc(l.name)} — ${fmtMoney(l.amount)} (${d.toLocaleDateString('en-AU',{day:'numeric',month:'short'})})</title></circle>`;
+      });
+    });
+  });
+
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = `
+    ${yGrid}
+    <polyline points="${pts}" fill="none" stroke="#1F8A70" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}${xTicks}${markers}
+  `;
+}
+
+function renderWeekCard(w){
+  const div = document.createElement('div');
+  div.className = 'week' + (w.isCurrent?' current':'') + (openWeeks.has(w.idx)?' open':'');
+  const payBadge = w.incomeLines.some(l=>!l.rollover && l.name.toLowerCase().includes('pay')) ? '' : '';
+
+  div.innerHTML = `
+    <div class="week-head" onclick="toggleWeek(${w.idx})">
+      <div class="week-dates">
+        <div class="week-range">${fmtRange(w.weekStart,w.weekEnd)}${w.isCurrent?'<span class="week-badge">This week</span>':''}</div>
+      </div>
+      <div class="week-nums">
+        <div class="week-num"><div class="n">${fmtMoney(w.incomeTotal)}</div><div class="l">Balance</div></div>
+        <div class="week-num ${w.savings<0?'neg':'pos'}"><div class="n">${fmtMoney(w.savings)}</div><div class="l">Saved</div></div>
+      </div>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="week-body">
+      <div class="line-group-title">Income</div>
+      ${w.incomeLines.map(l=>renderLine(w.idx,l,'income')).join('')}
+      <div class="line-group-title">Expenses</div>
+      ${w.expenseLines.length? w.expenseLines.map(l=>renderLine(w.idx,l,'expense')).join('') : '<div class="empty" style="padding:.6rem 0">No expenses yet</div>'}
+      <div class="oneoff-row">
+        <input type="text" placeholder="One-off name" id="oo-name-${w.idx}">
+        <select id="oo-kind-${w.idx}"><option value="expense">Expense</option><option value="income">Income</option></select>
+        <input type="number" placeholder="$" id="oo-amt-${w.idx}">
+        <button class="oneoff-add" onclick="addOneOff(${w.idx})">Add</button>
+      </div>
+      <div class="oneoff-row" style="margin-top:.3rem">
+        <input type="date" id="oo-date-${w.idx}" min="${fmtISO(w.weekStart)}" max="${fmtISO(w.weekEnd)}" style="flex:1">
+        <span class="field-note" style="align-self:center">optional specific date</span>
+      </div>
+      <div class="week-totals">
+        <div class="t"><div class="n">${fmtMoney(w.incomeTotal)}</div><div class="l">Balance</div></div>
+        <div class="t"><div class="n">${fmtMoney(w.expenseTotal)}</div><div class="l">Expenses</div></div>
+        <div class="t"><div class="n">${fmtMoney(w.savings)}</div><div class="l">Savings</div></div>
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+function renderLine(weekIdx, l, type){
+  const isRolloverLine = l.rollover;
+  const bucket = weekBucket(weekIdx);
+  const isOverridden = l.recurring && !isRolloverLine && bucket.overrides[l.id]!=null;
+  const rolloverOverridden = isRolloverLine && bucket.overrides['_rollover']!=null;
+
+  let budgetHint = '';
+  if(l.variable && !isRolloverLine){
+    const avg = avgActual(l.id);
+    budgetHint = `<span class="line-budgeted">budget ${fmtMoney(l.budgeted)}${avg!=null?` · avg ${fmtMoney(avg)}`:''}</span>`;
+  } else if(rolloverOverridden){
+    budgetHint = `<span class="line-budgeted">manually adjusted</span>`;
+  }
+
+  let removeBtn;
+  if(!l.recurring){
+    removeBtn = `<button class="line-x" onclick="removeOneOff(${weekIdx},'${l.id}')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+  } else if(isRolloverLine){
+    removeBtn = rolloverOverridden ? `<button class="line-x" title="Reset to calculated" onclick="resetOverride(${weekIdx},'_rollover')"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></button>` : '<span style="width:20px;display:inline-block"></span>';
+  } else if(isOverridden){
+    removeBtn = `<button class="line-x" title="Reset to default" onclick="resetOverride(${weekIdx},'${l.id}')"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></button>`;
+  } else {
+    removeBtn = `<button class="line-x" title="Skip this week" onclick="toggleSkip(${weekIdx},'${l.id}')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+  }
+
+  return `
+    <div class="line">
+      <div class="line-name">${esc(l.name)}${l.date?`<span class="tag">${fmtShortDate(parseISO(l.date))}</span>`:''}</div>
+      ${budgetHint}
+      <div class="line-amt-wrap">
+        <input class="line-amt ${type}" type="number" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value)">
+      </div>
+      ${removeBtn}
+    </div>
+  `;
+}
+function resetOverride(weekIdx, id){
+  const bucket = weekBucket(weekIdx);
+  delete bucket.overrides[id];
+  openWeeks.add(weekIdx);
+  persist();
+}
+function fmtShortDate(d){ return d.toLocaleDateString('en-AU',{day:'numeric',month:'short'}); }
+function round2(n){ return Math.round(n*100)/100; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleWeek(idx){
+  if(openWeeks.has(idx)) openWeeks.delete(idx); else openWeeks.add(idx);
+  render();
+}
+function editLine(weekIdx, id, val){
+  const bucket = weekBucket(weekIdx);
+  bucket.overrides[id] = parseFloat(val)||0;
+  openWeeks.add(weekIdx);
+  persist();
+}
+function toggleSkip(weekIdx, id){
+  const bucket = weekBucket(weekIdx);
+  const i = bucket.skipped.indexOf(id);
+  if(i>=0) bucket.skipped.splice(i,1); else bucket.skipped.push(id);
+  openWeeks.add(weekIdx);
+  persist();
+}
+function addOneOff(weekIdx){
+  const name = document.getElementById('oo-name-'+weekIdx).value.trim();
+  const amt = parseFloat(document.getElementById('oo-amt-'+weekIdx).value);
+  const kind = document.getElementById('oo-kind-'+weekIdx).value;
+  const date = document.getElementById('oo-date-'+weekIdx).value || null;
+  if(!name || !amt){ toast('Enter a name and amount'); return; }
+  weekBucket(weekIdx).oneOffs.push({id:'o'+Math.random().toString(36).slice(2,9), name, amount:amt, kind, date});
+  openWeeks.add(weekIdx);
+  persist();
+}
+function addOneOffOnDate(dateStr, name, amt, kind){
+  const start = parseISO(state.settings.startDate);
+  const idx = Math.floor((parseISO(dateStr) - start)/(7*86400000));
+  if(idx<0){ toast('That date is before your budget start date'); return; }
+  if(idx>=MAX_WEEKS){ toast('That date is beyond the 6-month window this app currently tracks'); return; }
+  weekBucket(idx).oneOffs.push({id:'o'+Math.random().toString(36).slice(2,9), name, amount:amt, kind, date:dateStr});
+  if(idx >= state.settings.weeksToShow) state.settings.weeksToShow = Math.min(MAX_WEEKS, idx+2);
+  openWeeks.add(idx);
+  persist();
+}
+function removeOneOff(weekIdx, id){
+  const bucket = weekBucket(weekIdx);
+  bucket.oneOffs = bucket.oneOffs.filter(o=>o.id!==id);
+  openWeeks.add(weekIdx);
+  persist();
+}
+function loadMoreWeeks(){
+  state.settings.weeksToShow = Math.min(MAX_WEEKS, state.settings.weeksToShow + 8);
+  persist();
+}
+
+// ───────────────────────── ADD ONE-OFF (global) ─────────────────────────
+function openAddOneOff(){
+  document.getElementById('aoo-name').value = '';
+  document.getElementById('aoo-amt').value = '';
+  document.getElementById('aoo-kind').value = 'expense';
+  document.querySelector('input[name="aoo-mode"][value="week"]').checked = true;
+  const start = parseISO(state.settings.startDate);
+  const n = Math.min(MAX_WEEKS, Math.max(state.settings.weeksToShow, todayWeekIndex()+2));
+  const sel = document.getElementById('aoo-week');
+  sel.innerHTML = '';
+  for(let i=0;i<n;i++){
+    const ws = addDays(start,i*7), we = addDays(ws,6);
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = fmtRange(ws,we) + (i===todayWeekIndex()?' (this week)':'');
+    if(i===todayWeekIndex()) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  const dateInput = document.getElementById('aoo-date');
+  dateInput.value = '';
+  dateInput.min = state.settings.startDate;
+  dateInput.max = fmtISO(addDays(start, MAX_WEEKS*7-1));
+  aooModeChange();
+  showModal('addoneoff-modal');
+}
+function aooModeChange(){
+  const mode = document.querySelector('input[name="aoo-mode"]:checked').value;
+  document.getElementById('aoo-week').style.display = mode==='week' ? '' : 'none';
+  document.getElementById('aoo-date').style.display = mode==='date' ? '' : 'none';
+}
+function addOneOffGlobal(){
+  const name = document.getElementById('aoo-name').value.trim();
+  const amt = parseFloat(document.getElementById('aoo-amt').value);
+  const kind = document.getElementById('aoo-kind').value;
+  const mode = document.querySelector('input[name="aoo-mode"]:checked').value;
+  if(!name || !amt){ toast('Enter a name and amount'); return; }
+  if(mode==='date'){
+    const date = document.getElementById('aoo-date').value;
+    if(!date){ toast('Pick a date'); return; }
+    addOneOffOnDate(date, name, amt, kind);
+  } else {
+    const weekIdx = parseInt(document.getElementById('aoo-week').value,10);
+    weekBucket(weekIdx).oneOffs.push({id:'o'+Math.random().toString(36).slice(2,9), name, amount:amt, kind, date:null});
+    openWeeks.add(weekIdx);
+    persist();
+  }
+  closeModal('addoneoff-modal');
+  toast('Added');
+}
+
+// ───────────────────────── CALENDAR ─────────────────────────
+let calMonth = new Date();
+let calDatedByDay = {};
+
+function openCalendar(){
+  const start = parseISO(state.settings.startDate);
+  const today = nowSydney();
+  calMonth = today > start ? new Date(today.getFullYear(), today.getMonth(), 1) : new Date(start.getFullYear(), start.getMonth(), 1);
+  renderCalendar();
+  showModal('calendar-modal');
+}
+function calMinMonth(){ const s = parseISO(state.settings.startDate); return new Date(s.getFullYear(), s.getMonth(), 1); }
+function calMaxMonth(){ const s = parseISO(state.settings.startDate); const end = addDays(s, MAX_WEEKS*7-1); return new Date(end.getFullYear(), end.getMonth(), 1); }
+function calShift(delta){
+  const next = addMonths(calMonth, delta);
+  if(next < calMinMonth() || next > calMaxMonth()) return;
+  calMonth = next;
+  renderCalendar();
+}
+
+function rawOccurrenceDates(item, rangeStart, rangeEnd){
+  const anchor = parseISO(item.anchorDate);
+  const out=[];
+  if(anchor>rangeEnd) return out;
+  if(item.cadence==='weekly' || item.cadence==='fortnightly'){
+    const step = item.cadence==='weekly'?7:14;
+    let d = new Date(anchor), guard=0;
+    while(d<rangeStart && guard<2000){ d=addDays(d,step); guard++; }
+    while(d<=rangeEnd && guard<2400){ out.push(new Date(d)); d=addDays(d,step); guard++; }
+  } else {
+    const monthsStep = item.cadence==='monthly'?1:item.cadence==='quarterly'?3:12;
+    let d = new Date(anchor), guard=0;
+    while(d<rangeStart && guard<600){ d=addMonths(d,monthsStep); guard++; }
+    while(d<=rangeEnd && guard<1200){ out.push(new Date(d)); d=addMonths(d,monthsStep); guard++; }
+  }
+  return out;
+}
+
+function occurrenceDatesInRange(item, rangeStart, rangeEnd){
+  const pad = 60*86400000;
+  const dates = rawOccurrenceDates(item, new Date(+rangeStart-pad), new Date(+rangeEnd+pad));
+  let result = dates;
+  const exceptions = item.exceptions || [];
+  const singleOriginals = new Set(exceptions.filter(e=>e.scope==='single').map(e=>e.date));
+  if(singleOriginals.size) result = result.filter(d=>!singleOriginals.has(fmtISO(d)));
+  if(item.shiftFrom && item.shiftDelta){
+    const shiftFromDate = parseISO(item.shiftFrom);
+    result = result.map(d=> d>=shiftFromDate ? addDays(d,item.shiftDelta) : d);
+  }
+  exceptions.filter(e=>e.scope==='single').forEach(e=>{ result.push(parseISO(e.newDate)); });
+  result = result.filter(d=>d>=rangeStart && d<=rangeEnd);
+  result.sort((a,b)=>a-b);
+  return result;
+}
+
+function renderCalendar(){
+  document.getElementById('cal-title').textContent = calMonth.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+  const navBtns = document.querySelectorAll('.cal-nav-btn');
+  navBtns[0].disabled = calMonth <= calMinMonth();
+  navBtns[1].disabled = calMonth >= calMaxMonth();
+  const monthEnd = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0);
+  const gridStart = mondayOnOrBefore(calMonth);
+  const gridEnd = addDays(mondayOnOrBefore(monthEnd),6);
+  const days=[]; let d=new Date(gridStart);
+  while(d<=gridEnd){ days.push(new Date(d)); d=addDays(d,1); }
+
+  const dated = {};
+  Object.entries(state.weeks).forEach(([weekIdxStr, bucket])=>{
+    bucket.oneOffs.forEach(o=>{
+      if(!o.date) return;
+      const dd = parseISO(o.date);
+      if(dd<gridStart||dd>gridEnd) return;
+      (dated[o.date] = dated[o.date]||[]).push({name:o.name, amount:o.amount, kind:o.kind, source:'oneoff', oneoffId:o.id, weekIdx:+weekIdxStr});
+    });
+  });
+  state.recurring.forEach(item=>{
+    if(!item.active) return;
+    occurrenceDatesInRange(item, gridStart, gridEnd).forEach(dt=>{
+      const iso = fmtISO(dt);
+      (dated[iso]=dated[iso]||[]).push({name:item.name, amount:item.amount, kind:item.kind, source:'recurring', itemId:item.id});
+    });
+  });
+  calDatedByDay = dated;
+
+  const dow=['Mo','Tu','We','Th','Fr','Sa','Su'];
+  let html = dow.map(x=>`<div style="text-align:center;font-weight:700;color:var(--ink-faint);padding:4px 0">${x}</div>`).join('');
+  days.forEach(dt=>{
+    const iso = fmtISO(dt);
+    const inMonth = dt.getMonth()===calMonth.getMonth();
+    const items = dated[iso]||[];
+    const dots = items.slice(0,4).map(it=>`<span style="width:5px;height:5px;border-radius:50%;display:inline-block;background:${it.kind==='income'?'#1F8A70':'#C4543A'};margin:0 1px"></span>`).join('');
+    html += `<div onclick="calDayClick('${iso}')" style="aspect-ratio:1;border:1px solid var(--border);border-radius:7px;padding:3px 4px;cursor:pointer;background:${inMonth?'var(--card)':'var(--bg)'};opacity:${inMonth?1:.4};display:flex;flex-direction:column">
+      <div style="font-size:.7rem;font-weight:600">${dt.getDate()}</div>
+      <div style="margin-top:auto;line-height:0">${dots}</div>
+    </div>`;
+  });
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+let calEditing = null; // {iso, idx}
+
+function calDayClick(iso){
+  calEditing = null;
+  renderCalDayDetail(iso);
+}
+function renderCalDayDetail(iso){
+  const items = calDatedByDay[iso]||[];
+  let listHtml;
+  if(!items.length){
+    listHtml = '<div class="empty">Nothing on this day</div>';
+  } else {
+    listHtml = items.map((it,idx)=>{
+      if(calEditing && calEditing.iso===iso && calEditing.idx===idx) return renderCalEditRow(iso, idx, it);
+      return `<div class="line">
+        <div class="line-name">${esc(it.name)}${it.source==='recurring'?'<span class="tag">recurring</span>':''}</div>
+        <div style="font-weight:700;color:${it.kind==='income'?'var(--accent-text)':'var(--ink)'}">${fmtMoney(it.amount)}</div>
+        <button class="rec-edit-btn" style="margin-left:6px" onclick="calEditStart('${iso}',${idx})" title="Change date">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('cal-day-detail').innerHTML = `
+    <div class="line-group-title">${fmtLongDate(parseISO(iso))}</div>
+    ${listHtml}
+    <div class="oneoff-row" style="margin-top:.6rem">
+      <input type="text" placeholder="Add expense on this day" id="cal-add-name">
+      <select id="cal-add-kind"><option value="expense">Expense</option><option value="income">Income</option></select>
+      <input type="number" placeholder="$" id="cal-add-amt">
+      <button class="oneoff-add" onclick="calAddOneOff('${iso}')">Add</button>
+    </div>
+  `;
+}
+function renderCalEditRow(iso, idx, it){
+  return `<div class="line" style="flex-wrap:wrap;gap:.5rem;padding:.5rem 0">
+    <div class="line-name" style="flex:1 0 100%">Move "${esc(it.name)}" to:</div>
+    <input type="date" id="cal-edit-date" value="${iso}" style="flex:1;border:1px solid var(--border);border-radius:7px;padding:.35rem .5rem">
+    ${it.source==='recurring' ? `
+      <div style="flex:1 0 100%;display:flex;gap:1rem;font-size:.78rem">
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400"><input type="radio" name="cal-edit-scope" value="single" checked> Just this occurrence</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400"><input type="radio" name="cal-edit-scope" value="future"> All future occurrences</label>
+      </div>` : ''}
+    <button class="btn ghost" style="flex:0 0 auto;padding:.4rem .8rem" onclick="calEditCancel('${iso}')">Cancel</button>
+    <button class="btn primary" style="flex:0 0 auto;padding:.4rem .8rem" onclick="calEditSave('${iso}',${idx})">Save</button>
+  </div>`;
+}
+function calEditStart(iso, idx){ calEditing = {iso, idx}; renderCalDayDetail(iso); }
+function calEditCancel(iso){ calEditing = null; renderCalDayDetail(iso); }
+function calEditSave(iso, idx){
+  const newDate = document.getElementById('cal-edit-date').value;
+  if(!newDate){ toast('Pick a date'); return; }
+  const it = calDatedByDay[iso][idx];
+  const start = parseISO(state.settings.startDate);
+
+  if(it.source==='oneoff'){
+    const newIdx = Math.floor((parseISO(newDate)-start)/(7*86400000));
+    if(newIdx<0 || newIdx>=MAX_WEEKS){ toast('That date is outside the 6-month window'); return; }
+    const oldBucket = weekBucket(it.weekIdx);
+    const rec = oldBucket.oneOffs.find(o=>o.id===it.oneoffId);
+    if(rec){
+      oldBucket.oneOffs = oldBucket.oneOffs.filter(o=>o.id!==it.oneoffId);
+      rec.date = newDate;
+      weekBucket(newIdx).oneOffs.push(rec);
+      openWeeks.add(newIdx);
+    }
+  } else {
+    const scope = document.querySelector('input[name="cal-edit-scope"]:checked').value;
+    const item = state.recurring.find(r=>r.id===it.itemId);
+    if(item){
+      if(scope==='single'){
+        item.exceptions = item.exceptions || [];
+        item.exceptions.push({date: iso, newDate, scope:'single'});
+      } else {
+        item.shiftFrom = iso;
+        item.shiftDelta = Math.round((parseISO(newDate)-parseISO(iso))/86400000);
+      }
+    }
+  }
+  calEditing = null;
+  persist();
+  renderCalendar();
+  renderCalDayDetail(iso);
+  toast('Date updated');
+}
+function fmtLongDate(d){ return d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}); }
+function calAddOneOff(iso){
+  const name = document.getElementById('cal-add-name').value.trim();
+  const amt = parseFloat(document.getElementById('cal-add-amt').value);
+  const kind = document.getElementById('cal-add-kind').value;
+  if(!name||!amt){ toast('Enter a name and amount'); return; }
+  addOneOffOnDate(iso, name, amt, kind);
+  renderCalendar();
+  renderCalDayDetail(iso);
+  toast('Added');
+}
+
+// ───────────────────────── RECURRING MODAL ─────────────────────────
+function openRecurring(){
+  const list = document.getElementById('rec-list');
+  if(!state.recurring.length){
+    list.innerHTML = '<div class="empty">No recurring items yet</div>';
+  } else {
+    const renderGroup = items => items.map(r=>`
+      <div class="rec-item">
+        <div class="rec-main">
+          <div class="rec-name">${esc(r.name)}</div>
+          <div class="rec-meta">${r.cadence}${r.variable?' · variable':''}${!r.active?' · inactive':''}</div>
+        </div>
+        <div class="rec-amt ${r.kind==='income'?'income':''}">${fmtMoney(r.amount)}</div>
+        <button class="rec-edit-btn" onclick="openRecItemForm('${r.id}')">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </button>
+      </div>
+    `).join('');
+    const income = state.recurring.filter(r=>r.kind==='income');
+    const expense = state.recurring.filter(r=>r.kind==='expense');
+    list.innerHTML = `
+      <div class="line-group-title">Income</div>
+      ${income.length ? renderGroup(income) : '<div class="empty" style="padding:.6rem 0">No recurring income yet</div>'}
+      <div class="line-group-title">Expenses</div>
+      ${expense.length ? renderGroup(expense) : '<div class="empty" style="padding:.6rem 0">No recurring expenses yet</div>'}
+    `;
+  }
+  showModal('recurring-modal');
+}
+function openRecItemForm(id){
+  document.getElementById('ri-id').value = id||'';
+  const item = id ? state.recurring.find(r=>r.id===id) : null;
+  document.getElementById('recitem-title').textContent = item ? 'Edit item' : 'Add item';
+  document.getElementById('ri-name').value = item?item.name:'';
+  document.getElementById('ri-kind').value = item?item.kind:'expense';
+  document.getElementById('ri-cadence').value = item?item.cadence:'weekly';
+  document.getElementById('ri-amount').value = item?item.amount:'';
+  document.getElementById('ri-anchor').value = item?item.anchorDate:state.settings.startDate;
+  document.getElementById('ri-variable').checked = item?item.variable:false;
+  document.getElementById('ri-delete-btn').style.display = item ? 'block' : 'none';
+  showModal('recitem-modal');
+}
+function saveRecItem(){
+  const id = document.getElementById('ri-id').value;
+  const name = document.getElementById('ri-name').value.trim();
+  if(!name){ toast('Enter a name'); return; }
+  const data = {
+    name,
+    kind: document.getElementById('ri-kind').value,
+    cadence: document.getElementById('ri-cadence').value,
+    amount: parseFloat(document.getElementById('ri-amount').value)||0,
+    anchorDate: document.getElementById('ri-anchor').value || state.settings.startDate,
+    variable: document.getElementById('ri-variable').checked
+  };
+  if(id){
+    const item = state.recurring.find(r=>r.id===id);
+    Object.assign(item, data);
+  } else {
+    state.recurring.push({id:'r'+Math.random().toString(36).slice(2,9), active:true, ...data});
+  }
+  closeModal('recitem-modal');
+  persist();
+  openRecurring();
+}
+function deleteRecItem(){
+  const id = document.getElementById('ri-id').value;
+  if(!id) return;
+  state.recurring = state.recurring.filter(r=>r.id!==id);
+  closeModal('recitem-modal');
+  persist();
+  openRecurring();
+}
+
+// ───────────────────────── SETTINGS MODAL ─────────────────────────
+function openSettings(){
+  document.getElementById('set-owner').value = OWNER;
+  document.getElementById('set-repo').value = REPO;
+  document.getElementById('set-token').value = ghToken;
+  showModal('settings-modal');
+}
+function saveSettings(){
+  OWNER = document.getElementById('set-owner').value.trim() || OWNER;
+  REPO = document.getElementById('set-repo').value.trim() || REPO;
+  ghToken = document.getElementById('set-token').value.trim();
+  localStorage.setItem('budget_gh_owner', OWNER);
+  localStorage.setItem('budget_gh_repo', REPO);
+  localStorage.setItem('budget_gh_token', ghToken);
+
+  closeModal('settings-modal');
+  persist();
+  manualSync();
+}
+
+// ───────────────────────── BACKUP ─────────────────────────
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `budget-backup-${fmtISO(new Date())}.json`;
+  a.click();
+}
+function importJSON(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      state = data;
+      openWeeks.clear();
+      persist();
+      manualSync();
+      toast('Imported backup');
+    }catch(e){ toast('Could not read that file'); }
+  };
+  reader.readAsText(file);
+}
+
+// ───────────────────────── MODAL HELPERS ─────────────────────────
+function showModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('show'); });
+});
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+// ───────────────────────── GITHUB SYNC ─────────────────────────
+function apiUrl(){ return `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`; }
+
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p1)=>String.fromCharCode(parseInt(p1,16))));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(atob(str.replace(/\n/g,'')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+function syncDotUpdate(status){
+  const btn = document.querySelector('.hbtn[title="Sync now"]');
+  if(!btn) return;
+  btn.classList.toggle('syncing', status==='syncing');
+  btn.classList.toggle('sync-err', status==='err');
+}
+
+let lastSyncError = '';
+
+async function pullFromGitHub(showFeedback){
+  if(!ghToken) return;
+  syncDotUpdate('syncing');
+  try{
+    const res = await fetch(apiUrl(), {headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github.v3+json'}});
+    if(res.status===404){
+      currentSha = null;
+      localStorage.removeItem('budget_gh_sha');
+      const ok = await pushToGitHub(true);
+      if(showFeedback) toast(ok ? 'Created budget-data.json in your repo' : `Sync failed — ${lastSyncError}`);
+      return;
+    }
+    if(res.status===401){ syncDotUpdate('err'); if(showFeedback) toast('Sync failed (401) — token is invalid, check Settings'); return; }
+    if(res.status===403){ syncDotUpdate('err'); if(showFeedback) toast('Sync failed (403) — token lacks access to this repo'); return; }
+    if(!res.ok) throw new Error(res.status+' '+res.statusText);
+    const data = await res.json();
+    currentSha = data.sha;
+    localStorage.setItem('budget_gh_sha', currentSha);
+    const remote = JSON.parse(b64DecodeUnicode(data.content));
+    if(!state.updatedAt || (remote.updatedAt && remote.updatedAt > state.updatedAt)){
+      state = remote;
+      openWeeks.clear();
+      saveLocal();
+      render();
+    }
+    syncDotUpdate('ok');
+    if(showFeedback) toast('Synced with GitHub');
+  }catch(e){
+    console.error(e);
+    syncDotUpdate('err');
+    if(showFeedback) toast('Sync failed — '+(e.message||'check your connection'));
+  }
+}
+
+async function pushToGitHub(isCreate){
+  if(!ghToken){ return false; }
+  if(!isOnline){ pendingSync = true; showOfflineBanner(true); return false; }
+  syncDotUpdate('syncing');
+  try{
+    const body = {
+      message: 'Update budget data',
+      content: b64EncodeUnicode(JSON.stringify(state))
+    };
+    if(currentSha) body.sha = currentSha;
+    const res = await fetch(apiUrl(), {
+      method:'PUT',
+      headers:{Authorization:`token ${ghToken}`, 'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if(res.status===409){
+      // sha conflict — refetch sha and retry once with our data (last write wins)
+      const cur = await fetch(apiUrl(), {headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github.v3+json'}});
+      if(cur.ok){ const cd = await cur.json(); currentSha = cd.sha; }
+      const retry = await fetch(apiUrl(), {method:'PUT', headers:{Authorization:`token ${ghToken}`, 'Content-Type':'application/json'}, body: JSON.stringify({...body, sha:currentSha})});
+      if(!retry.ok){ const eb = await retry.json().catch(()=>({})); throw new Error(retry.status+' '+(eb.message||'retry failed')); }
+      const rd = await retry.json();
+      currentSha = rd.content.sha;
+    } else if(!res.ok){
+      const eb = await res.json().catch(()=>({}));
+      throw new Error(res.status+' '+(eb.message||res.statusText||'PUT failed'));
+    } else {
+      const rd = await res.json();
+      currentSha = rd.content.sha;
+    }
+    localStorage.setItem('budget_gh_sha', currentSha);
+    pendingSync = false;
+    showOfflineBanner(false);
+    syncDotUpdate('ok');
+    return true;
+  }catch(e){
+    console.error(e);
+    pendingSync = true;
+    syncDotUpdate('err');
+    lastSyncError = e.message || String(e);
+    return false;
+  }
+}
+
+function scheduleSync(){
+  if(!ghToken) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>pushToGitHub(false), 1100);
+}
+function manualSync(){
+  if(!ghToken){ toast('Add a GitHub token in Settings first'); openSettings(); return; }
+  pullFromGitHub(true);
+}
+
+function showOfflineBanner(show){
+  document.getElementById('offline-banner').classList.toggle('show', show);
+  document.getElementById('sync-now-btn').classList.toggle('show', show);
+}
+window.addEventListener('online', ()=>{ isOnline=true; if(pendingSync) pushToGitHub(false); showOfflineBanner(false); });
+window.addEventListener('offline', ()=>{ isOnline=false; showOfflineBanner(true); });
+
+// ───────────────────────── INIT ─────────────────────────
+function init(){
+  render();
+  if(ghToken){ pullFromGitHub(); }
+  if(!isOnline) showOfflineBanner(true);
+}
+init();
+</script>
+</body>
+</html>
