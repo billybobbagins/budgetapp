@@ -425,8 +425,11 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.4.2';
 const CHANGELOG = [
+  { version:'1.4.2', date:'2026-08-16', notes:[
+    'Fixed drag-and-drop on iPhone: touching the handle showed the "picked up" border/shadow correctly, but moving your finger just scrolled the page instead of reordering — the pointermove listener now blocks the default scroll itself (touch-action:none on the handle alone wasn\'t enough on iOS Safari), registered non-passive so the fix actually takes effect'
+  ]},
   { version:'1.4.1', date:'2026-08-16', notes:[
     'Fixed the drag handle icon disappearing (v1.4.0 regression) — the bigger touch target used padding that, combined with the site-wide box-sizing:border-box reset, ate into the icon\'s own 16px box and collapsed it to nothing'
   ]},
@@ -1534,6 +1537,11 @@ function initDragReorder(){
     try{ handle.setPointerCapture(pointerId); }catch(err){}
 
     const move = ev=>{
+      // Without this, iOS Safari can still scroll the page during the gesture even though
+      // touch-action:none is set on the handle — the pointermove listener must be registered
+      // non-passive (below) AND call preventDefault() itself for every move, not just on the
+      // initial pointerdown.
+      ev.preventDefault();
       const siblings = [...container.children].filter(x=>x!==item && x.matches(itemSelector));
       let next = null;
       for(const sib of siblings){
@@ -1551,9 +1559,9 @@ function initDragReorder(){
       document.body.classList.remove('drag-active');
       commitDragOrder(item, itemSelector);
     };
-    window.addEventListener('pointermove', move);
+    window.addEventListener('pointermove', move, {passive:false});
     window.addEventListener('pointerup', up);
-  });
+  }, {passive:false});
 }
 function commitDragOrder(item, itemSelector){
   if(itemSelector==='.rec-item'){
