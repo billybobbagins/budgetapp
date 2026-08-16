@@ -108,15 +108,15 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .line{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;font-size:.86rem}
 .line-name{flex:1;min-width:0}
 .line-name .tag{font-size:.68rem;color:var(--ink-faint);display:block}
-.line-amt-wrap{display:flex;align-items:center;gap:1px}
+.line-amt-wrap{display:flex;align-items:center;gap:0}
 .line-amt-dollar{font-weight:600;font-size:.86rem}
 .line-amt-dollar.income{color:var(--accent-text)}
 .line-amt-dollar.expense{color:var(--ink)}
-.line-amt{width:64px;text-align:right;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 5px;font-weight:600;font-size:.86rem;font-family:var(--sans)}
+.line-amt{width:auto;field-sizing:content;text-align:left;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 2px 3px 1px;font-weight:600;font-size:.86rem;font-family:var(--sans)}
 .line-amt:focus{border-color:var(--border-mid);background:var(--bg)}
 .line-amt.income{color:var(--accent-text)}
 .line-amt.expense{color:var(--ink)}
-.line-amt.static{display:inline-block;cursor:default;border-color:transparent;width:auto}
+.line-amt.static{display:inline-block;cursor:default;border-color:transparent}
 .line-amt::-webkit-outer-spin-button,.line-amt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .line-amt[type=number]{-moz-appearance:textfield}
 .line-budgeted{font-size:.6rem;color:var(--ink-faint);white-space:nowrap}
@@ -370,8 +370,11 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 const CHANGELOG = [
+  { version:'1.1.2', date:'2026-08-16', notes:[
+    'Fixed the $ sign sitting far left of the number on editable amount fields — the input now sizes itself to its value instead of using a fixed width, so $ and the digits sit flush together like the locked/static amounts'
+  ]},
   { version:'1.1.1', date:'2026-08-16', notes:[
     'Fixed editable amount fields (variable items, one-offs, savings) rendering without a $ sign and misaligned compared to the static locked amounts — added a matching $ prefix and removed the browser\'s number spinner arrows that were pushing the digits left'
   ]},
@@ -734,7 +737,7 @@ function renderLine(weekIdx, l, type){
       ${budgetHint}
       <div class="line-amt-wrap">
         ${editable
-          ? `<span class="line-amt-dollar ${type}">$</span><input class="line-amt ${type}" type="number" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value)">`
+          ? `<span class="line-amt-dollar ${type}">$</span><input class="line-amt ${type}" type="number" size="${Math.max(2,String(round2(l.amount)).length)}" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value); this.size=Math.max(2,this.value.length)" oninput="this.size=Math.max(2,this.value.length)">`
           : `<span class="line-amt ${type} static">${fmtMoney(l.amount)}</span>`}
       </div>
       ${removeBtn}
