@@ -120,7 +120,7 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .cal-nav-btn:hover:not(:disabled){background:var(--accent-light);color:var(--accent-text);border-color:var(--accent)}
 .line-group-title:first-child{margin-top:0}
 .line{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;font-size:.86rem}
-.drag-handle{width:16px;height:16px;fill:var(--ink-faint);flex-shrink:0;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;padding:9px 7px;margin:-9px -7px -9px -3px}
+.drag-handle{box-sizing:content-box;width:16px;height:16px;fill:var(--ink-faint);flex-shrink:0;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;padding:9px 7px;margin:-9px -7px -9px -3px}
 .drag-handle:active{cursor:grabbing}
 .line.dragging,.rec-item.dragging{opacity:.92;background:var(--card);box-shadow:0 6px 16px rgba(20,18,14,.18);border-radius:8px;position:relative;z-index:5}
 body.drag-active{-webkit-user-select:none;user-select:none}
@@ -425,8 +425,11 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 const CHANGELOG = [
+  { version:'1.4.1', date:'2026-08-16', notes:[
+    'Fixed the drag handle icon disappearing (v1.4.0 regression) — the bigger touch target used padding that, combined with the site-wide box-sizing:border-box reset, ate into the icon\'s own 16px box and collapsed it to nothing'
+  ]},
   { version:'1.4.0', date:'2026-08-16', notes:[
     'Added an optional app PIN (Settings → App PIN) — prompts on a fresh open of the app, stays unlocked for that session. Device-local only, a deterrent rather than real security.',
     'Drag-and-drop: fixed iPhone grabbing/highlighting text instead of dragging — the handle now has a proper touch target and blocks text selection while dragging, plus a clearer "lifted" look while a row is being dragged',
