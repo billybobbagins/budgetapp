@@ -108,12 +108,17 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .line{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;font-size:.86rem}
 .line-name{flex:1;min-width:0}
 .line-name .tag{font-size:.68rem;color:var(--ink-faint);display:block}
-.line-amt-wrap{display:flex;align-items:center;gap:4px}
-.line-amt{width:76px;text-align:right;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 5px;font-weight:600;font-size:.86rem;font-family:var(--sans)}
+.line-amt-wrap{display:flex;align-items:center;gap:1px}
+.line-amt-dollar{font-weight:600;font-size:.86rem}
+.line-amt-dollar.income{color:var(--accent-text)}
+.line-amt-dollar.expense{color:var(--ink)}
+.line-amt{width:64px;text-align:right;border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 5px;font-weight:600;font-size:.86rem;font-family:var(--sans)}
 .line-amt:focus{border-color:var(--border-mid);background:var(--bg)}
 .line-amt.income{color:var(--accent-text)}
 .line-amt.expense{color:var(--ink)}
-.line-amt.static{display:inline-block;cursor:default;border-color:transparent}
+.line-amt.static{display:inline-block;cursor:default;border-color:transparent;width:auto}
+.line-amt::-webkit-outer-spin-button,.line-amt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.line-amt[type=number]{-moz-appearance:textfield}
 .line-budgeted{font-size:.6rem;color:var(--ink-faint);white-space:nowrap}
 .line-x{background:none;border:none;color:var(--ink-faint);cursor:pointer;width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:5px}
 .line-x:hover{background:var(--neg-light);color:var(--neg-text)}
@@ -365,8 +370,11 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 const CHANGELOG = [
+  { version:'1.1.1', date:'2026-08-16', notes:[
+    'Fixed editable amount fields (variable items, one-offs, savings) rendering without a $ sign and misaligned compared to the static locked amounts — added a matching $ prefix and removed the browser\'s number spinner arrows that were pushing the digits left'
+  ]},
   { version:'1.1.0', date:'2026-08-16', notes:[
     'Inline editing is now restricted to variable recurring items (plus one-offs and the savings line) — fixed items like rent are locked to their budgeted amount and can no longer be edited per-week',
     'Fixed a bug where editing a one-off\'s amount inline didn\'t actually save',
@@ -726,7 +734,7 @@ function renderLine(weekIdx, l, type){
       ${budgetHint}
       <div class="line-amt-wrap">
         ${editable
-          ? `<input class="line-amt ${type}" type="number" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value)">`
+          ? `<span class="line-amt-dollar ${type}">$</span><input class="line-amt ${type}" type="number" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value)">`
           : `<span class="line-amt ${type} static">${fmtMoney(l.amount)}</span>`}
       </div>
       ${removeBtn}
