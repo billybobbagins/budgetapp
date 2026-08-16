@@ -1150,6 +1150,7 @@ let lastSyncError = '';
 async function pullFromGitHub(showFeedback){
   if(!ghToken) return;
   syncDotUpdate('syncing');
+  const neverSyncedOnThisDevice = !currentSha;
   try{
     const res = await fetch(apiUrl(), {headers:{Authorization:`token ${ghToken}`, Accept:'application/vnd.github.v3+json'}});
     if(res.status===404){
@@ -1166,7 +1167,10 @@ async function pullFromGitHub(showFeedback){
     currentSha = data.sha;
     localStorage.setItem('budget_gh_sha', currentSha);
     const remote = JSON.parse(b64DecodeUnicode(data.content));
-    if(!state.updatedAt || (remote.updatedAt && remote.updatedAt > state.updatedAt)){
+    // A fresh browser/origin always generates a brand-new default state stamped "now" —
+    // that will always look newer than genuinely-old remote data by timestamp alone, so on
+    // a device that has never synced before, the remote is trusted unconditionally.
+    if(neverSyncedOnThisDevice || !state.updatedAt || (remote.updatedAt && remote.updatedAt > state.updatedAt)){
       state = remote;
       openWeeks.clear();
       saveLocal();
