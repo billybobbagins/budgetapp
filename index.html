@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Budget">
-<title>Weekly Budget</title>
+<meta name="apple-mobile-web-app-title" content="Benny's Budget">
+<title>Benny's Budget</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 <style>
@@ -96,6 +96,7 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .week-dates{flex:1;min-width:0}
 .week-range{font-size:.92rem;font-weight:700}
 .week-badge{display:inline-block;font-size:.65rem;font-weight:700;background:var(--accent-light);color:var(--accent-text);padding:1px 7px;border-radius:8px;margin-left:6px;vertical-align:middle;letter-spacing:.02em}
+.week-badge.projected{background:var(--bg-alt);color:var(--ink-faint)}
 .week-nums{display:flex;gap:1rem;align-items:baseline}
 .week-num{text-align:right}
 .week-num .n{font-weight:700;font-size:.95rem;font-family:var(--serif)}
@@ -223,7 +224,7 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 </div>
 
 <header>
-  <div class="logo">Weekly <em>Budget</em> <span class="ver-tag" id="ver-tag"></span></div>
+  <div class="logo">Benny's <em>Budget</em> <span class="ver-tag" id="ver-tag"></span></div>
   <button class="hbtn" id="sync-btn" onclick="manualSync()" title="Sync now">
     <svg viewBox="0 0 24 24" id="sync-icon"><path d="M17 2l4 4-4 4M3 12v-2a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v2a4 4 0 0 1-4 4H3"/></svg>
   </button>
@@ -244,7 +245,7 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
     <div class="summary-value" id="cur-week-savings">$0</div>
     <div class="summary-sub" id="cur-week-sub">—</div>
     <svg class="spark" id="spark" viewBox="0 0 600 92" preserveAspectRatio="none"></svg>
-    <div class="legend"><span><i style="background:#1F8A70"></i>Dated income</span><span><i style="background:#C4543A"></i>Dated expense</span></div>
+    <div class="legend"><span><i style="background:#1F8A70"></i>Dated income</span><span><i style="background:#C4543A"></i>Dated expense</span><span><i style="background:#B8AF9A"></i>Projected (not yet reviewed)</span></div>
   </div>
 
   <div class="toolbar">
@@ -393,8 +394,13 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const CHANGELOG = [
+  { version:'1.3.0', date:'2026-08-16', notes:[
+    'Renamed the app to "Benny\'s Budget"',
+    'Weeks with no actual edits (no overrides, one-offs, or skips — still just the recurring defaults) now show a "Projected" badge, so it\'s clear which weeks reflect real numbers vs. an untouched projection',
+    'The savings chart line now renders dashed/muted for the portion of the range that\'s still projected, and solid green once a week has been reviewed — makes it easy to see how far out the numbers can actually be trusted'
+  ]},
   { version:'1.2.0', date:'2026-08-16', notes:[
     'Drag-and-drop reordering: within a week card\'s Income/Expenses lists (per-week, via a saved order list) and in the Recurring items list (reorders the underlying list itself)',
     'Chart now plots a point for every dated event (recurring occurrences + one-offs) instead of just one point per week, so the line actually follows the balance up and down as things happen',
@@ -583,7 +589,11 @@ function computeWeek(idx, priorSavings){
   const expenseTotal = expenseLines.reduce((a,l)=>a+l.amount,0);
   const savings = incomeTotal - expenseTotal;
 
-  return {idx, weekStart, weekEnd, incomeLines, expenseLines, incomeTotal, expenseTotal, savings, isCurrent: idx===curIdx};
+  // A week counts as "reviewed" once it has any actual per-week data — an override, a one-off,
+  // or a skip. Otherwise it's still just the recurring defaults projected forward untouched.
+  const hasActuals = bucket.oneOffs.length>0 || bucket.skipped.length>0 || Object.keys(bucket.overrides).length>0;
+
+  return {idx, weekStart, weekEnd, incomeLines, expenseLines, incomeTotal, expenseTotal, savings, isCurrent: idx===curIdx, hasActuals};
 }
 
 function computeAll(n){
@@ -688,20 +698,20 @@ function renderSpark(weeks){
   // Walk every dated event (recurring occurrences + one-offs) across the range in order, so the
   // line actually dips/rises as things happen rather than just jumping once per week.
   let balance = weeks[0].incomeLines.find(l=>l.id==='_rollover').amount;
-  const points = [{date:rangeStartDate, balance, kind:null}];
+  const points = [{date:rangeStartDate, balance, kind:null, hasActuals:weeks[0].hasActuals}];
   const events = [];
   weeks.forEach(w=>{
     [['income',w.incomeLines],['expense',w.expenseLines]].forEach(([kind,lines])=>{
       lines.forEach(l=>{
         if(l.rollover) return;
-        events.push({date:parseISO(l.occurDate), kind, name:l.name, amount:l.amount});
+        events.push({date:parseISO(l.occurDate), kind, name:l.name, amount:l.amount, hasActuals:w.hasActuals});
       });
     });
   });
   events.sort((a,b)=>a.date-b.date);
   events.forEach(e=>{
     balance += (e.kind==='income' ? e.amount : -e.amount);
-    points.push({date:e.date, balance, kind:e.kind, name:e.name, amount:e.amount});
+    points.push({date:e.date, balance, kind:e.kind, name:e.name, amount:e.amount, hasActuals:e.hasActuals});
   });
 
   const vals = points.map(p=>p.balance);
@@ -713,7 +723,15 @@ function renderSpark(weeks){
   const xFor = d => padL + (totalMs>0 ? ((d-rangeStartDate)/totalMs)*plotW : 0);
   const yFor = v => padT + plotH - ((v-niceMin)/range)*plotH;
 
-  const pts = points.map(p=>`${xFor(p.date)},${yFor(p.balance)}`).join(' ');
+  // Drawn as individual segments (not one polyline) so the portion covering weeks you haven't
+  // actually reviewed yet (still just recurring defaults) can render dashed/muted instead of
+  // solid — a visual cue for how far the projection can actually be trusted.
+  let lineSegs = '';
+  for(let i=1;i<points.length;i++){
+    const a = points[i-1], b = points[i];
+    const reviewed = b.hasActuals;
+    lineSegs += `<line x1="${xFor(a.date)}" y1="${yFor(a.balance)}" x2="${xFor(b.date)}" y2="${yFor(b.balance)}" stroke="${reviewed?'#1F8A70':'#B8AF9A'}" stroke-width="2" stroke-linecap="round" ${reviewed?'':'stroke-dasharray="4,3"'}/>`;
+  }
   const dots = points.map(p=>{
     if(!p.kind) return `<circle cx="${xFor(p.date)}" cy="${yFor(p.balance)}" r="2" fill="#1F8A70"/>`;
     const color = p.kind==='income' ? '#1F8A70' : '#C4543A';
@@ -737,7 +755,7 @@ function renderSpark(weeks){
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.innerHTML = `
     ${yGrid}
-    <polyline points="${pts}" fill="none" stroke="#1F8A70" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${lineSegs}
     ${dots}${xTicks}
   `;
 }
@@ -751,7 +769,7 @@ function renderWeekCard(w){
   div.innerHTML = `
     <div class="week-head" onclick="toggleWeek(${w.idx})">
       <div class="week-dates">
-        <div class="week-range">${fmtRange(w.weekStart,w.weekEnd)}${w.isCurrent?'<span class="week-badge">This week</span>':''}</div>
+        <div class="week-range">${fmtRange(w.weekStart,w.weekEnd)}${w.isCurrent?'<span class="week-badge">This week</span>':''}${!w.hasActuals?'<span class="week-badge projected">Projected</span>':''}</div>
       </div>
       <div class="week-nums">
         <div class="week-num"><div class="n">${fmtMoney(w.incomeTotal)}</div><div class="l">Balance</div></div>
