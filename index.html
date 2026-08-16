@@ -54,21 +54,28 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 #sync-icon{transition:transform .25s}
 .hbtn.syncing #sync-icon{animation:spin .8s linear infinite}
 .hbtn.sync-err #sync-icon{stroke:#E28169}
+.hbtn.sync-err{border-color:rgba(226,129,105,.5)}
+.hbtn.sync-dirty #sync-icon{stroke:#E28169}
+.hbtn.sync-dirty{border-color:rgba(226,129,105,.5)}
+.hbtn.sync-clean #sync-icon{stroke:#8FD9C4}
+.hbtn.sync-clean{border-color:rgba(143,217,196,.5)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .app{max-width:640px;margin:0 auto;padding:1.1rem 1rem 4rem}
 
 /* summary */
 .summary{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.2rem;margin-bottom:1.1rem;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-.summary-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.15rem}
+.summary-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.15rem;flex-wrap:wrap;gap:.4rem .6rem}
 .summary-label{font-size:.72rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .summary-value{font-family:var(--serif);font-size:1.9rem;font-weight:600}
 .summary-value.neg{color:var(--neg-text)}
 .summary-value.pos{color:var(--accent-text)}
 .summary-sub{font-size:.82rem;color:var(--ink-mid);margin-top:.3rem}
-.range-toggle{display:flex;gap:3px}
+.range-toggle{display:flex;gap:3px;flex-wrap:wrap}
 .range-btn{background:var(--bg-alt);border:1px solid var(--border);color:var(--ink-mid);font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer}
 .range-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.range-date{background:var(--bg-alt);border:1px solid var(--border);color:var(--ink-mid);font-size:.66rem;font-weight:700;padding:2px 5px;border-radius:6px;cursor:pointer;width:100px}
+.range-date.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent-text)}
 .spark{margin-top:.7rem;height:86px;width:100%}
 .legend{display:flex;gap:14px;margin-top:.4rem;font-size:.68rem;color:var(--ink-faint)}
 .legend span{display:inline-flex;align-items:center;gap:4px}
@@ -101,11 +108,20 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .week.open .week-body{display:block}
 
 .line-group-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);font-weight:800;margin:.8rem 0 .4rem}
+.line-group{border:1px solid var(--border);border-radius:10px;padding:.6rem .7rem .35rem;margin-bottom:.7rem}
+.line-group.income{border-color:rgba(31,138,112,.28)}
+.line-group.expense{border-color:rgba(196,84,58,.28)}
+.line-group .line-group-title{margin:0 0 .45rem;padding-bottom:.35rem;border-bottom:1px solid var(--border-mid)}
+.line-group.income .line-group-title{color:var(--accent-text)}
+.line-group.expense .line-group-title{color:var(--neg-text)}
 .cal-nav-btn{background:var(--bg-alt);border:1px solid var(--border);color:var(--ink);width:32px;height:32px;border-radius:8px;font-size:1.1rem;cursor:pointer;flex-shrink:0;line-height:1}
 .cal-nav-btn:disabled{opacity:.35;cursor:not-allowed}
 .cal-nav-btn:hover:not(:disabled){background:var(--accent-light);color:var(--accent-text);border-color:var(--accent)}
 .line-group-title:first-child{margin-top:0}
 .line{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;font-size:.86rem}
+.drag-handle{width:14px;height:14px;fill:var(--ink-faint);flex-shrink:0;cursor:grab;touch-action:none}
+.drag-handle:active{cursor:grabbing}
+.line.dragging,.rec-item.dragging{opacity:.45;background:var(--bg-alt);border-radius:6px}
 .line-name{flex:1;min-width:0}
 .line-name .tag{font-size:.68rem;color:var(--ink-faint);display:block}
 .line-amt-wrap{display:flex;align-items:center;gap:0}
@@ -131,9 +147,16 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .oneoff-row input,.oneoff-row select{min-width:0}
 .oneoff-row input{flex:1;border:1px solid var(--border);border-radius:7px;padding:.4rem .5rem;font-size:.82rem;background:var(--bg)}
 .oneoff-row input.oo-amt{flex:0 0 56px;padding:.4rem .35rem}
-.oneoff-row input.oo-date{flex:0 0 108px;padding:.4rem .3rem;font-size:.74rem}
-.oneoff-row select{flex:0 0 72px;border:1px solid var(--border);border-radius:7px;padding:.4rem .25rem;font-size:.74rem;background:var(--bg)}
+.oneoff-row select{flex:0 0 84px;border:1px solid var(--border);border-radius:7px;padding:.4rem .25rem;font-size:.74rem;background:var(--bg)}
+.oo-date-wrap{position:relative;flex:0 0 108px;display:flex}
+.oo-date-wrap input.oo-date{flex:1;width:100%;padding:.4rem 22px .4rem .3rem;font-size:.74rem}
+.oo-date-icon{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:13px;height:13px;stroke:var(--ink-faint);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}
+.oo-date::-webkit-calendar-picker-indicator{opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
 .oneoff-add{flex:0 0 auto;background:var(--ink);color:#fff;border:none;border-radius:7px;padding:.4rem .7rem;font-size:.8rem;cursor:pointer;font-weight:600}
+
+@media(max-width:480px){
+  .oneoff-row input.oo-name{flex:1 1 100%}
+}
 
 .week-totals{display:flex;justify-content:space-between;margin-top:.9rem;padding-top:.7rem;border-top:1px dashed var(--border-mid);font-size:.86rem}
 .week-totals .t{text-align:center;flex:1}
@@ -201,7 +224,7 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 
 <header>
   <div class="logo">Weekly <em>Budget</em> <span class="ver-tag" id="ver-tag"></span></div>
-  <button class="hbtn" onclick="manualSync()" title="Sync now">
+  <button class="hbtn" id="sync-btn" onclick="manualSync()" title="Sync now">
     <svg viewBox="0 0 24 24" id="sync-icon"><path d="M17 2l4 4-4 4M3 12v-2a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v2a4 4 0 0 1-4 4H3"/></svg>
   </button>
   <button class="hbtn" onclick="openRecurring()" title="Recurring items">
@@ -370,8 +393,17 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.2.0';
 const CHANGELOG = [
+  { version:'1.2.0', date:'2026-08-16', notes:[
+    'Drag-and-drop reordering: within a week card\'s Income/Expenses lists (per-week, via a saved order list) and in the Recurring items list (reorders the underlying list itself)',
+    'Chart now plots a point for every dated event (recurring occurrences + one-offs) instead of just one point per week, so the line actually follows the balance up and down as things happen',
+    'Chart x-axis now shows a tick for every week in range instead of just start/middle/end',
+    'Added a custom end-date picker next to the 1W/4W/12W/6MO chart range buttons, to see savings accrued up to a specific date',
+    'Sync icon now shows red when there are unsynced local changes and green when everything is synced (auto-sync already ran in the background — this just makes it visible so the manual Sync button shouldn\'t be needed)',
+    'Income and Expenses sections in each week card now have their own bordered box with an underlined, colour-coded title',
+    'One-off add form: wider type dropdown on desktop; on narrow phones the name field is now full-width with the rest wrapping below it; the date field now shows a calendar icon on iPhone (previously invisible there)'
+  ]},
   { version:'1.1.2', date:'2026-08-16', notes:[
     'Fixed the $ sign sitting far left of the number on editable amount fields — the input now sizes itself to its value instead of using a fixed width, so $ and the digits sit flush together like the locked/static amounts'
   ]},
@@ -396,6 +428,7 @@ let currentSha = localStorage.getItem('budget_gh_sha') || null;
 let isOnline = navigator.onLine;
 let pendingSync = false;
 let syncTimer = null;
+let hasUnsyncedChanges = false; // drives the sync icon's red/green idle state
 
 // ───────────────────────── STATE ─────────────────────────
 function rnd(min, max, step){
@@ -444,6 +477,8 @@ function saveLocal(){
 }
 function persist(){
   saveLocal();
+  hasUnsyncedChanges = true;
+  syncDotUpdate();
   render();
   scheduleSync();
 }
@@ -478,10 +513,6 @@ function fmtMoney(n){
 }
 
 // ───────────────────────── OCCURRENCE LOGIC ─────────────────────────
-function occursInWeek(item, weekStart, weekEnd){
-  return occurrenceDatesInRange(item, weekStart, weekEnd).length > 0;
-}
-
 function avgActual(itemId){
   const vals=[];
   Object.values(state.weeks).forEach(w=>{
@@ -497,6 +528,13 @@ function todayWeekIndex(){
   return diff;
 }
 
+// Sorts lines in place to match a saved drag-reorder id list; anything not in the list keeps
+// its existing relative position (Array#sort is stable), so new/unordered items just trail along.
+function applyOrder(lines, order){
+  const idx = id => { const i = order.indexOf(id); return i===-1 ? Infinity : i; };
+  lines.sort((a,b)=> idx(a.id)-idx(b.id));
+}
+
 // ───────────────────────── COMPUTE ─────────────────────────
 function computeWeek(idx, priorSavings){
   const start = parseISO(state.settings.startDate);
@@ -510,7 +548,8 @@ function computeWeek(idx, priorSavings){
   state.recurring.forEach(item=>{
     if(!item.active) return;
     if(bucket.skipped.includes(item.id)) return;
-    if(!occursInWeek(item, weekStart, weekEnd)) return;
+    const occDates = occurrenceDatesInRange(item, weekStart, weekEnd);
+    if(!occDates.length) return;
     let amount = item.amount;
     const ov = bucket.overrides[item.id];
     if(item.variable){
@@ -519,18 +558,26 @@ function computeWeek(idx, priorSavings){
     } else if(ov!=null){
       amount = ov;
     }
-    const line = {id:item.id, name:item.name, amount, variable:item.variable, budgeted:item.amount, recurring:true};
+    // occurDate is the item's actual occurrence date this week — used for the balance chart.
+    // Kept separate from the user-facing "date" tag (one-offs only) so recurring items don't
+    // suddenly grow a date badge in the week list.
+    const line = {id:item.id, name:item.name, amount, variable:item.variable, budgeted:item.amount, recurring:true, occurDate:fmtISO(occDates[0])};
     (item.kind==='income'?incomeLines:expenseLines).push(line);
   });
 
   bucket.oneOffs.forEach(o=>{
-    const line = {id:o.id, name:o.name, amount:o.amount, recurring:false, date:o.date||null};
+    const line = {id:o.id, name:o.name, amount:o.amount, recurring:false, date:o.date||null, occurDate:o.date||fmtISO(weekStart)};
     (o.kind==='income'?incomeLines:expenseLines).push(line);
   });
 
   const rolloverOv = bucket.overrides['_rollover'];
   const rolloverAmount = rolloverOv!=null ? rolloverOv : priorSavings;
   incomeLines.push({id:'_rollover', name: idx===0?'Savings':'Savings (rollover)', amount:rolloverAmount, recurring:true, rollover:true});
+
+  if(bucket.order && bucket.order.length){
+    applyOrder(incomeLines, bucket.order);
+    applyOrder(expenseLines, bucket.order);
+  }
 
   const incomeTotal = incomeLines.reduce((a,l)=>a+l.amount,0);
   const expenseTotal = expenseLines.reduce((a,l)=>a+l.amount,0);
@@ -559,9 +606,16 @@ function render(){
   const weeks = computeAll(n);
 
   // ── chart / summary period (independent of the week list below) ──
-  const chartRange = state.settings.chartRange || 12;
   const chartStart = Math.max(0, todayWeekIndex());
-  const chartEnd = Math.min(MAX_WEEKS-1, chartStart + chartRange - 1);
+  const startDate = parseISO(state.settings.startDate);
+  let chartEnd;
+  if(state.settings.chartEndDate){
+    const endIdx = Math.floor((parseISO(state.settings.chartEndDate) - startDate)/(7*86400000));
+    chartEnd = Math.min(MAX_WEEKS-1, Math.max(chartStart, endIdx));
+  } else {
+    const chartRange = state.settings.chartRange || 12;
+    chartEnd = Math.min(MAX_WEEKS-1, chartStart + chartRange - 1);
+  }
   const fullForChart = computeAll(chartEnd+1);
   const rangeWeeks = fullForChart.slice(chartStart, chartEnd+1);
   const first = rangeWeeks[0], last = rangeWeeks[rangeWeeks.length-1];
@@ -577,7 +631,12 @@ function render(){
     `${fmtRange(first.weekStart,last.weekEnd)} · Income ${fmtMoney(totalIncome)} · Expenses ${fmtMoney(totalExpenses)}`;
 
   const rt = document.getElementById('range-toggle');
-  rt.innerHTML = RANGE_OPTIONS.map(o=>`<button class="range-btn${chartRange===o.n?' active':''}" onclick="setChartRange(${o.n})">${o.label}</button>`).join('');
+  const customEnd = !!state.settings.chartEndDate;
+  const chartRange = state.settings.chartRange || 12;
+  const dateMin = fmtISO(addDays(startDate, chartStart*7));
+  const dateMax = fmtISO(addDays(startDate, MAX_WEEKS*7 - 1));
+  rt.innerHTML = RANGE_OPTIONS.map(o=>`<button class="range-btn${!customEnd && chartRange===o.n?' active':''}" onclick="setChartRange(${o.n})">${o.label}</button>`).join('')
+    + `<input type="date" class="range-date${customEnd?' active':''}" id="chart-end-date" value="${state.settings.chartEndDate||''}" min="${dateMin}" max="${dateMax}" title="Show savings up to a specific date" onchange="setChartEndDate(this.value)">`;
 
   renderSpark(rangeWeeks);
 
@@ -592,6 +651,11 @@ function render(){
 }
 function setChartRange(n){
   state.settings.chartRange = n;
+  state.settings.chartEndDate = null;
+  persist();
+}
+function setChartEndDate(val){
+  state.settings.chartEndDate = val || null;
   persist();
 }
 
@@ -617,21 +681,51 @@ function niceTicks(min, max, targetCount){
 
 function renderSpark(weeks){
   const svg = document.getElementById('spark');
-  const vals = weeks.map(w=>w.savings);
+  const rangeStartDate = weeks[0].weekStart;
+  const rangeEndDate = weeks[weeks.length-1].weekEnd;
+  const totalMs = rangeEndDate - rangeStartDate;
+
+  // Walk every dated event (recurring occurrences + one-offs) across the range in order, so the
+  // line actually dips/rises as things happen rather than just jumping once per week.
+  let balance = weeks[0].incomeLines.find(l=>l.id==='_rollover').amount;
+  const points = [{date:rangeStartDate, balance, kind:null}];
+  const events = [];
+  weeks.forEach(w=>{
+    [['income',w.incomeLines],['expense',w.expenseLines]].forEach(([kind,lines])=>{
+      lines.forEach(l=>{
+        if(l.rollover) return;
+        events.push({date:parseISO(l.occurDate), kind, name:l.name, amount:l.amount});
+      });
+    });
+  });
+  events.sort((a,b)=>a.date-b.date);
+  events.forEach(e=>{
+    balance += (e.kind==='income' ? e.amount : -e.amount);
+    points.push({date:e.date, balance, kind:e.kind, name:e.name, amount:e.amount});
+  });
+
+  const vals = points.map(p=>p.balance);
   const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
   const {ticks, niceMin, niceMax} = niceTicks(rawMin, rawMax, 4);
   const range = (niceMax-niceMin)||1;
-  const W=600,H=92, padL=50, padB=18, padT=8;
+  const W=600,H=98, padL=50, padB=24, padT=8;
   const plotW = W-padL, plotH = H-padB-padT;
-  const n = weeks.length;
-  const xFor = fracIdx => padL + (n>1 ? (fracIdx/(n-1))*plotW : 0);
+  const xFor = d => padL + (totalMs>0 ? ((d-rangeStartDate)/totalMs)*plotW : 0);
   const yFor = v => padT + plotH - ((v-niceMin)/range)*plotH;
 
-  const pts = vals.map((v,i)=>`${xFor(i)},${yFor(v)}`).join(' ');
-  const dots = vals.map((v,i)=>`<circle cx="${xFor(i)}" cy="${yFor(v)}" r="2.2" fill="#1F8A70"/>`).join('');
+  const pts = points.map(p=>`${xFor(p.date)},${yFor(p.balance)}`).join(' ');
+  const dots = points.map(p=>{
+    if(!p.kind) return `<circle cx="${xFor(p.date)}" cy="${yFor(p.balance)}" r="2" fill="#1F8A70"/>`;
+    const color = p.kind==='income' ? '#1F8A70' : '#C4543A';
+    return `<circle cx="${xFor(p.date)}" cy="${yFor(p.balance)}" r="3" fill="${color}" stroke="#fff" stroke-width="1"><title>${esc(p.name)} — ${fmtMoney(p.amount)} (${p.date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})})</title></circle>`;
+  }).join('');
 
-  const tickIdxs = n>=3 ? [0, Math.floor((n-1)/2), n-1] : weeks.map((_,i)=>i);
-  const xTicks = tickIdxs.map(i=>`<text x="${xFor(i)}" y="${H-3}" font-size="9" fill="#8C8C7C" text-anchor="${i===0?'start':i===n-1?'end':'middle'}">${weeks[i].weekStart.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</text>`).join('');
+  // A tick for every week in range, however many that is — labels rotated so they don't collide.
+  const xTicks = weeks.map(w=>{
+    const x = xFor(w.weekStart);
+    return `<line x1="${x}" y1="${H-padB}" x2="${x}" y2="${H-padB+3}" stroke="#B8AF9A" stroke-width="1"/>
+      <text x="${x}" y="${H-padB+6}" font-size="7.5" fill="#8C8C7C" text-anchor="end" transform="rotate(-40 ${x} ${H-padB+6})">${w.weekStart.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</text>`;
+  }).join('');
 
   const yGrid = ticks.map(t=>{
     const y = yFor(t);
@@ -640,30 +734,18 @@ function renderSpark(weeks){
       <text x="${padL-6}" y="${y+3}" font-size="9" fill="#8C8C7C" text-anchor="end">${fmtMoney(t)}</text>`;
   }).join('');
 
-  let markers = '';
-  weeks.forEach((w,i)=>{
-    [['income',w.incomeLines,'#1F8A70'],['expense',w.expenseLines,'#C4543A']].forEach(([kind,lines,color])=>{
-      lines.forEach(l=>{
-        if(!l.date) return;
-        const d = parseISO(l.date);
-        const fracIdx = Math.min(n-1, i + Math.max(0,(d-w.weekStart)/86400000)/7);
-        const x = xFor(fracIdx), y = yFor(w.savings);
-        markers += `<circle cx="${x}" cy="${y}" r="3.4" fill="${color}" stroke="#fff" stroke-width="1"><title>${esc(l.name)} — ${fmtMoney(l.amount)} (${d.toLocaleDateString('en-AU',{day:'numeric',month:'short'})})</title></circle>`;
-      });
-    });
-  });
-
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.innerHTML = `
     ${yGrid}
     <polyline points="${pts}" fill="none" stroke="#1F8A70" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${dots}${xTicks}${markers}
+    ${dots}${xTicks}
   `;
 }
 
 function renderWeekCard(w){
   const div = document.createElement('div');
   div.className = 'week' + (w.isCurrent?' current':'') + (openWeeks.has(w.idx)?' open':'');
+  div.dataset.idx = w.idx;
   const payBadge = w.incomeLines.some(l=>!l.rollover && l.name.toLowerCase().includes('pay')) ? '' : '';
 
   div.innerHTML = `
@@ -678,16 +760,23 @@ function renderWeekCard(w){
       <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
     </div>
     <div class="week-body">
-      <div class="line-group-title">Income</div>
-      ${w.incomeLines.map(l=>renderLine(w.idx,l,'income')).join('')}
-      <div class="line-group-title">Expenses</div>
-      ${w.expenseLines.length? w.expenseLines.map(l=>renderLine(w.idx,l,'expense')).join('') : '<div class="empty" style="padding:.6rem 0">No expenses yet</div>'}
+      <div class="line-group income">
+        <div class="line-group-title">Income</div>
+        ${w.incomeLines.map(l=>renderLine(w.idx,l,'income')).join('')}
+      </div>
+      <div class="line-group expense">
+        <div class="line-group-title">Expenses</div>
+        ${w.expenseLines.length? w.expenseLines.map(l=>renderLine(w.idx,l,'expense')).join('') : '<div class="empty" style="padding:.6rem 0">No expenses yet</div>'}
+      </div>
       <div class="oneoff-divider"></div>
       <div class="oneoff-row">
-        <input type="text" placeholder="One-off name" id="oo-name-${w.idx}">
+        <input type="text" class="oo-name" placeholder="One-off name" id="oo-name-${w.idx}">
         <select id="oo-kind-${w.idx}"><option value="expense">Expense</option><option value="income">Income</option></select>
         <input type="number" placeholder="$" class="oo-amt" id="oo-amt-${w.idx}">
-        <input type="date" class="oo-date" id="oo-date-${w.idx}" min="${fmtISO(w.weekStart)}" max="${fmtISO(w.weekEnd)}">
+        <div class="oo-date-wrap">
+          <input type="date" class="oo-date" id="oo-date-${w.idx}" min="${fmtISO(w.weekStart)}" max="${fmtISO(w.weekEnd)}">
+          <svg class="oo-date-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
         <button class="oneoff-add" onclick="addOneOff(${w.idx})">Add</button>
       </div>
       <div class="week-totals">
@@ -732,7 +821,8 @@ function renderLine(weekIdx, l, type){
   }
 
   return `
-    <div class="line">
+    <div class="line" data-id="${l.id}">
+      <svg class="drag-handle" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>
       <div class="line-name">${esc(l.name)}${l.date?`<span class="tag">${fmtShortDate(parseISO(l.date))}</span>`:''}</div>
       ${budgetHint}
       <div class="line-amt-wrap">
@@ -1058,7 +1148,8 @@ function openRecurring(){
     list.innerHTML = '<div class="empty">No recurring items yet</div>';
   } else {
     const renderGroup = items => items.map(r=>`
-      <div class="rec-item">
+      <div class="rec-item" data-id="${r.id}">
+        <svg class="drag-handle" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>
         <div class="rec-main">
           <div class="rec-name">${esc(r.name)}</div>
           <div class="rec-meta">${r.cadence}${r.variable?' · variable':''}${!r.active?' · inactive':''}</div>
@@ -1195,10 +1286,16 @@ function b64DecodeUnicode(str){
 }
 
 function syncDotUpdate(status){
-  const btn = document.querySelector('.hbtn[title="Sync now"]');
+  const btn = document.getElementById('sync-btn');
   if(!btn) return;
-  btn.classList.toggle('syncing', status==='syncing');
-  btn.classList.toggle('sync-err', status==='err');
+  const syncing = status==='syncing';
+  const err = status==='err';
+  const idle = !syncing && !err;
+  btn.classList.toggle('syncing', syncing);
+  btn.classList.toggle('sync-err', err);
+  btn.classList.toggle('sync-dirty', idle && !!ghToken && hasUnsyncedChanges);
+  btn.classList.toggle('sync-clean', idle && !!ghToken && !hasUnsyncedChanges);
+  btn.title = !ghToken ? 'Sync now' : syncing ? 'Syncing…' : err ? 'Sync failed — click to retry' : hasUnsyncedChanges ? 'Unsynced changes — click to sync now' : 'Synced';
 }
 
 let lastSyncError = '';
@@ -1273,8 +1370,9 @@ async function pushToGitHub(isCreate){
     }
     localStorage.setItem('budget_gh_sha', currentSha);
     pendingSync = false;
+    hasUnsyncedChanges = false;
     showOfflineBanner(false);
-    syncDotUpdate('ok');
+    syncDotUpdate();
     return true;
   }catch(e){
     console.error(e);
@@ -1314,10 +1412,65 @@ function renderVersionInfo(){
   `).join('');
 }
 
+// ───────────────────────── DRAG REORDER ─────────────────────────
+// One delegated pointerdown listener (mouse + touch, no separate touch handling needed) rather
+// than per-row listeners — survives the DOM being rebuilt on every render() without rebinding.
+function initDragReorder(){
+  document.addEventListener('pointerdown', e=>{
+    const handle = e.target.closest('.drag-handle');
+    if(!handle) return;
+    const item = handle.parentElement;
+    const container = item.parentElement;
+    if(!item || !container) return;
+    e.preventDefault();
+    const itemSelector = item.classList.contains('rec-item') ? '.rec-item' : '.line';
+    const pointerId = e.pointerId;
+    item.classList.add('dragging');
+    try{ handle.setPointerCapture(pointerId); }catch(err){}
+
+    const move = ev=>{
+      const siblings = [...container.children].filter(x=>x!==item && x.matches(itemSelector));
+      let next = null;
+      for(const sib of siblings){
+        const r = sib.getBoundingClientRect();
+        if(ev.clientY < r.top + r.height/2){ next = sib; break; }
+      }
+      if(next) container.insertBefore(item, next);
+      else container.appendChild(item);
+    };
+    const up = ()=>{
+      try{ handle.releasePointerCapture(pointerId); }catch(err){}
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      item.classList.remove('dragging');
+      commitDragOrder(item, itemSelector);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
+function commitDragOrder(item, itemSelector){
+  if(itemSelector==='.rec-item'){
+    const ids = [...document.querySelectorAll('#rec-list .rec-item')].map(el=>el.dataset.id);
+    state.recurring.sort((a,b)=> ids.indexOf(a.id)-ids.indexOf(b.id));
+    persist();
+    return;
+  }
+  const card = item.closest('.week');
+  if(!card) return;
+  const weekIdx = +card.dataset.idx;
+  const ids = [...card.querySelectorAll('.line-group .line')].map(el=>el.dataset.id);
+  weekBucket(weekIdx).order = ids;
+  openWeeks.add(weekIdx);
+  persist();
+}
+
 // ───────────────────────── INIT ─────────────────────────
 function init(){
   render();
   renderVersionInfo();
+  syncDotUpdate();
+  initDragReorder();
   if(ghToken){ pullFromGitHub(); }
   if(!isOnline) showOfflineBanner(true);
 }
