@@ -47,6 +47,7 @@ button,input,select{font-family:var(--sans)}
 header{height:var(--header);background:var(--ink);display:flex;align-items:center;padding:0 1rem;gap:0.6rem;position:sticky;top:0;z-index:30}
 .logo{font-family:var(--serif);font-size:1.2rem;color:#F6F4EF;font-weight:600;flex:1}
 .logo em{font-style:italic;color:#8FD9C4}
+.ver-tag{font-family:var(--sans);font-size:.62rem;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.02em;vertical-align:middle}
 .hbtn{background:none;border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.8);width:34px;height:34px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hbtn:hover{background:rgba(255,255,255,.1);color:#fff}
 .hbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -112,16 +113,21 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .line-amt:focus{border-color:var(--border-mid);background:var(--bg)}
 .line-amt.income{color:var(--accent-text)}
 .line-amt.expense{color:var(--ink)}
-.line-budgeted{font-size:.68rem;color:var(--ink-faint);white-space:nowrap}
+.line-amt.static{display:inline-block;cursor:default;border-color:transparent}
+.line-budgeted{font-size:.6rem;color:var(--ink-faint);white-space:nowrap}
 .line-x{background:none;border:none;color:var(--ink-faint);cursor:pointer;width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:5px}
 .line-x:hover{background:var(--neg-light);color:var(--neg-text)}
 .line-x svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .line-skip{opacity:.4;text-decoration:line-through}
 
-.oneoff-row{display:flex;gap:.4rem;margin-top:.6rem}
-.oneoff-row input{flex:1;border:1px solid var(--border);border-radius:7px;padding:.4rem .6rem;font-size:.82rem;background:var(--bg)}
-.oneoff-row input[type=number]{flex:0 0 90px}
-.oneoff-row select{flex:0 0 84px;border:1px solid var(--border);border-radius:7px;padding:.4rem .3rem;font-size:.78rem;background:var(--bg)}
+.oneoff-divider{border-top:1px solid var(--border);margin:.9rem 0 .7rem}
+
+.oneoff-row{display:flex;gap:.35rem;margin-top:.6rem;flex-wrap:wrap}
+.oneoff-row input,.oneoff-row select{min-width:0}
+.oneoff-row input{flex:1;border:1px solid var(--border);border-radius:7px;padding:.4rem .5rem;font-size:.82rem;background:var(--bg)}
+.oneoff-row input.oo-amt{flex:0 0 56px;padding:.4rem .35rem}
+.oneoff-row input.oo-date{flex:0 0 108px;padding:.4rem .3rem;font-size:.74rem}
+.oneoff-row select{flex:0 0 72px;border:1px solid var(--border);border-radius:7px;padding:.4rem .25rem;font-size:.74rem;background:var(--bg)}
 .oneoff-add{flex:0 0 auto;background:var(--ink);color:#fff;border:none;border-radius:7px;padding:.4rem .7rem;font-size:.8rem;cursor:pointer;font-weight:600}
 
 .week-totals{display:flex;justify-content:space-between;margin-top:.9rem;padding-top:.7rem;border-top:1px dashed var(--border-mid);font-size:.86rem}
@@ -170,6 +176,14 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .empty{text-align:center;padding:2rem 1rem;color:var(--ink-faint);font-size:.85rem}
+
+.changelog-entry{margin-bottom:.7rem}
+.changelog-entry:last-child{margin-bottom:0}
+.changelog-head{display:flex;align-items:baseline;gap:.4rem}
+.changelog-ver{font-weight:700;font-size:.78rem}
+.changelog-date{font-size:.68rem;color:var(--ink-faint)}
+.changelog-notes{margin:.25rem 0 0;padding-left:1.1rem;font-size:.76rem;color:var(--ink-mid)}
+.changelog-notes li{margin-bottom:.15rem}
 </style>
 </head>
 <body>
@@ -181,7 +195,7 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 </div>
 
 <header>
-  <div class="logo">Weekly <em>Budget</em></div>
+  <div class="logo">Weekly <em>Budget</em> <span class="ver-tag" id="ver-tag"></span></div>
   <button class="hbtn" onclick="manualSync()" title="Sync now">
     <svg viewBox="0 0 24 24" id="sync-icon"><path d="M17 2l4 4-4 4M3 12v-2a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 12v2a4 4 0 0 1-4 4H3"/></svg>
   </button>
@@ -248,6 +262,12 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
         <button class="btn ghost" onclick="document.getElementById('import-file').click()">Import .json</button>
       </div>
       <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importJSON(event)">
+    </div>
+
+    <div class="field" style="margin-top:1.3rem">
+      <label>About</label>
+      <div class="field-note" id="version-line" style="margin-top:0"></div>
+      <div id="changelog-list" style="margin-top:.6rem"></div>
     </div>
   </div>
 </div>
@@ -341,6 +361,22 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 // ───────────────────────── CONFIG ─────────────────────────
 const PATH = 'budget-data.json';
 const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is still evolving
+
+// ───────────────────────── VERSION ─────────────────────────
+// Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
+// badge and Settings → About) when the live file has actually updated, and what changed.
+const APP_VERSION = '1.1.0';
+const CHANGELOG = [
+  { version:'1.1.0', date:'2026-08-16', notes:[
+    'Inline editing is now restricted to variable recurring items (plus one-offs and the savings line) — fixed items like rent are locked to their budgeted amount and can no longer be edited per-week',
+    'Fixed a bug where editing a one-off\'s amount inline didn\'t actually save',
+    'Added a divider between the income/expenses list and the one-off add form on each week card',
+    'Combined the one-off add form into a single row and fixed a mobile layout bug where it could overflow the card and hide the Add button',
+    'The "budget $X" hint on variable items now only shows when the amount actually differs from the default budgeted amount, same as the existing "avg" hint',
+    'Added this version/changelog system'
+  ]},
+  { version:'1.0.0', date:'2026-08-16', notes:['Initial tracked version'] }
+];
 let OWNER = localStorage.getItem('budget_gh_owner') || 'billybobbagins';
 let REPO  = localStorage.getItem('budget_gh_repo')  || 'budget';
 let ghToken = localStorage.getItem('budget_gh_token') || '';
@@ -635,15 +671,13 @@ function renderWeekCard(w){
       ${w.incomeLines.map(l=>renderLine(w.idx,l,'income')).join('')}
       <div class="line-group-title">Expenses</div>
       ${w.expenseLines.length? w.expenseLines.map(l=>renderLine(w.idx,l,'expense')).join('') : '<div class="empty" style="padding:.6rem 0">No expenses yet</div>'}
+      <div class="oneoff-divider"></div>
       <div class="oneoff-row">
         <input type="text" placeholder="One-off name" id="oo-name-${w.idx}">
         <select id="oo-kind-${w.idx}"><option value="expense">Expense</option><option value="income">Income</option></select>
-        <input type="number" placeholder="$" id="oo-amt-${w.idx}">
+        <input type="number" placeholder="$" class="oo-amt" id="oo-amt-${w.idx}">
+        <input type="date" class="oo-date" id="oo-date-${w.idx}" min="${fmtISO(w.weekStart)}" max="${fmtISO(w.weekEnd)}">
         <button class="oneoff-add" onclick="addOneOff(${w.idx})">Add</button>
-      </div>
-      <div class="oneoff-row" style="margin-top:.3rem">
-        <input type="date" id="oo-date-${w.idx}" min="${fmtISO(w.weekStart)}" max="${fmtISO(w.weekEnd)}" style="flex:1">
-        <span class="field-note" style="align-self:center">optional specific date</span>
       </div>
       <div class="week-totals">
         <div class="t"><div class="n">${fmtMoney(w.incomeTotal)}</div><div class="l">Balance</div></div>
@@ -660,11 +694,17 @@ function renderLine(weekIdx, l, type){
   const bucket = weekBucket(weekIdx);
   const isOverridden = l.recurring && !isRolloverLine && bucket.overrides[l.id]!=null;
   const rolloverOverridden = isRolloverLine && bucket.overrides['_rollover']!=null;
+  // Fixed (non-variable) recurring items are locked to their budgeted amount — only variable
+  // items, one-offs, and the savings rollover line can be edited inline, and always per-week only.
+  const editable = isRolloverLine || !l.recurring || l.variable;
 
   let budgetHint = '';
   if(l.variable && !isRolloverLine){
     const avg = avgActual(l.id);
-    budgetHint = `<span class="line-budgeted">budget ${fmtMoney(l.budgeted)}${avg!=null?` · avg ${fmtMoney(avg)}`:''}</span>`;
+    const parts = [];
+    if(round2(l.amount)!==round2(l.budgeted)) parts.push(`budget ${fmtMoney(l.budgeted)}`);
+    if(avg!=null) parts.push(`avg ${fmtMoney(avg)}`);
+    if(parts.length) budgetHint = `<span class="line-budgeted">${parts.join(' · ')}</span>`;
   } else if(rolloverOverridden){
     budgetHint = `<span class="line-budgeted">manually adjusted</span>`;
   }
@@ -685,7 +725,9 @@ function renderLine(weekIdx, l, type){
       <div class="line-name">${esc(l.name)}${l.date?`<span class="tag">${fmtShortDate(parseISO(l.date))}</span>`:''}</div>
       ${budgetHint}
       <div class="line-amt-wrap">
-        <input class="line-amt ${type}" type="number" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value)">
+        ${editable
+          ? `<input class="line-amt ${type}" type="number" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value)">`
+          : `<span class="line-amt ${type} static">${fmtMoney(l.amount)}</span>`}
       </div>
       ${removeBtn}
     </div>
@@ -707,7 +749,10 @@ function toggleWeek(idx){
 }
 function editLine(weekIdx, id, val){
   const bucket = weekBucket(weekIdx);
-  bucket.overrides[id] = parseFloat(val)||0;
+  const amt = parseFloat(val)||0;
+  const oneoff = bucket.oneOffs.find(o=>o.id===id);
+  if(oneoff){ oneoff.amount = amt; } // one-offs store their amount directly, not via overrides
+  else { bucket.overrides[id] = amt; } // variable recurring items / rollover — this week only
   openWeeks.add(weekIdx);
   persist();
 }
@@ -1246,9 +1291,22 @@ function showOfflineBanner(show){
 window.addEventListener('online', ()=>{ isOnline=true; if(pendingSync) pushToGitHub(false); showOfflineBanner(false); });
 window.addEventListener('offline', ()=>{ isOnline=false; showOfflineBanner(true); });
 
+// ───────────────────────── VERSION / CHANGELOG UI ─────────────────────────
+function renderVersionInfo(){
+  document.getElementById('ver-tag').textContent = 'v'+APP_VERSION;
+  document.getElementById('version-line').textContent = `Version ${APP_VERSION}`;
+  document.getElementById('changelog-list').innerHTML = CHANGELOG.map(c=>`
+    <div class="changelog-entry">
+      <div class="changelog-head"><span class="changelog-ver">v${c.version}</span><span class="changelog-date">${c.date}</span></div>
+      <ul class="changelog-notes">${c.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+}
+
 // ───────────────────────── INIT ─────────────────────────
 function init(){
   render();
+  renderVersionInfo();
   if(ghToken){ pullFromGitHub(); }
   if(!isOnline) showOfflineBanner(true);
 }
