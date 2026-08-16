@@ -120,9 +120,10 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .cal-nav-btn:hover:not(:disabled){background:var(--accent-light);color:var(--accent-text);border-color:var(--accent)}
 .line-group-title:first-child{margin-top:0}
 .line{display:flex;align-items:center;gap:.5rem;padding:.32rem 0;font-size:.86rem}
-.drag-handle{width:14px;height:14px;fill:var(--ink-faint);flex-shrink:0;cursor:grab;touch-action:none}
+.drag-handle{width:16px;height:16px;fill:var(--ink-faint);flex-shrink:0;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;padding:9px 7px;margin:-9px -7px -9px -3px}
 .drag-handle:active{cursor:grabbing}
-.line.dragging,.rec-item.dragging{opacity:.45;background:var(--bg-alt);border-radius:6px}
+.line.dragging,.rec-item.dragging{opacity:.92;background:var(--card);box-shadow:0 6px 16px rgba(20,18,14,.18);border-radius:8px;position:relative;z-index:5}
+body.drag-active{-webkit-user-select:none;user-select:none}
 .line-name{flex:1;min-width:0}
 .line-name .tag{font-size:.68rem;color:var(--ink-faint);display:block}
 .line-amt-wrap{display:flex;align-items:center;gap:0}
@@ -213,6 +214,17 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .changelog-date{font-size:.68rem;color:var(--ink-faint)}
 .changelog-notes{margin:.25rem 0 0;padding-left:1.1rem;font-size:.76rem;color:var(--ink-mid)}
 .changelog-notes li{margin-bottom:.15rem}
+
+#lock-screen{display:none;position:fixed;inset:0;background:var(--ink);z-index:500;align-items:center;justify-content:center;padding:1.2rem}
+#lock-screen.show{display:flex}
+.lock-box{width:100%;max-width:280px;text-align:center}
+.lock-title{font-family:var(--serif);font-size:1.5rem;color:#F6F4EF;font-weight:600;margin-bottom:.2rem}
+.lock-title em{font-style:italic;color:#8FD9C4}
+.lock-sub{font-size:.82rem;color:rgba(255,255,255,.6);margin-bottom:1.3rem}
+#lock-pin-input{width:100%;text-align:center;letter-spacing:.4em;font-size:1.3rem;padding:.7rem;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;margin-bottom:.9rem}
+#lock-pin-input:focus{outline:none;border-color:var(--accent)}
+.lock-error{display:none;color:#E28169;font-size:.78rem;margin:-.5rem 0 .9rem}
+.lock-error.show{display:block}
 </style>
 </head>
 <body>
@@ -291,6 +303,15 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
         <button class="btn ghost" onclick="document.getElementById('import-file').click()">Import .json</button>
       </div>
       <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importJSON(event)">
+    </div>
+
+    <div class="field" style="margin-top:1.3rem">
+      <label>App PIN</label>
+      <input id="set-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="4–8 digits, leave blank to remove">
+      <div class="field-note">Stored only on this device. Prompts for this PIN on a fresh open of the app (staying unlocked for the rest of that session) — a simple deterrent against someone picking up your phone, not real encryption.</div>
+      <div class="modal-actions" style="margin-top:.6rem">
+        <button class="btn primary" onclick="setAppPin()">Save PIN</button>
+      </div>
     </div>
 
     <div class="field" style="margin-top:1.3rem">
@@ -386,6 +407,16 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 
 <div class="toast" id="toast"></div>
 
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-title">Benny's <em>Budget</em></div>
+    <div class="lock-sub">Enter PIN to continue</div>
+    <input type="password" inputmode="numeric" pattern="[0-9]*" id="lock-pin-input" maxlength="8" autocomplete="off" placeholder="••••">
+    <div class="lock-error" id="lock-error">Incorrect PIN</div>
+    <button class="btn primary" onclick="tryUnlock()">Unlock</button>
+  </div>
+</div>
+
 <script>
 // ───────────────────────── CONFIG ─────────────────────────
 const PATH = 'budget-data.json';
@@ -394,8 +425,13 @@ const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is st
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const CHANGELOG = [
+  { version:'1.4.0', date:'2026-08-16', notes:[
+    'Added an optional app PIN (Settings → App PIN) — prompts on a fresh open of the app, stays unlocked for that session. Device-local only, a deterrent rather than real security.',
+    'Drag-and-drop: fixed iPhone grabbing/highlighting text instead of dragging — the handle now has a proper touch target and blocks text selection while dragging, plus a clearer "lifted" look while a row is being dragged',
+    'Logged the savings chart\'s general confusion as an open item to revisit — no concrete fix yet'
+  ]},
   { version:'1.3.0', date:'2026-08-16', notes:[
     'Renamed the app to "Benny\'s Budget"',
     'Weeks with no actual edits (no overrides, one-offs, or skips — still just the recurring defaults) now show a "Projected" badge, so it\'s clear which weeks reflect real numbers vs. an untouched projection',
@@ -430,6 +466,7 @@ let OWNER = localStorage.getItem('budget_gh_owner') || 'billybobbagins';
 let REPO  = localStorage.getItem('budget_gh_repo')  || 'budget';
 let ghToken = localStorage.getItem('budget_gh_token') || '';
 let currentSha = localStorage.getItem('budget_gh_sha') || null;
+let appPinHash = localStorage.getItem('budget_pin_hash') || ''; // device-local only, never synced
 
 let isOnline = navigator.onLine;
 let pendingSync = false;
@@ -1238,7 +1275,53 @@ function openSettings(){
   document.getElementById('set-owner').value = OWNER;
   document.getElementById('set-repo').value = REPO;
   document.getElementById('set-token').value = ghToken;
+  document.getElementById('set-pin').value = '';
   showModal('settings-modal');
+}
+
+// ───────────────────────── PIN LOCK ─────────────────────────
+// Deliberately simple: a SHA-256 hash stored in localStorage (device-local, never synced), just
+// enough to deter someone casually picking up the phone — not real encryption, and bypassable
+// by anyone who opens devtools. Locks once per fresh session (sessionStorage), not on every
+// backgrounding, per explicit preference.
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function isLocked(){
+  return !!appPinHash && sessionStorage.getItem('budget_unlocked')!=='1';
+}
+function updateLockScreen(){
+  const locked = isLocked();
+  document.getElementById('lock-screen').classList.toggle('show', locked);
+  if(locked) document.getElementById('lock-pin-input').focus();
+}
+async function tryUnlock(){
+  const input = document.getElementById('lock-pin-input');
+  const hash = await sha256Hex(input.value);
+  if(hash===appPinHash){
+    sessionStorage.setItem('budget_unlocked','1');
+    input.value = '';
+    document.getElementById('lock-error').classList.remove('show');
+    updateLockScreen();
+  } else {
+    document.getElementById('lock-error').classList.add('show');
+    input.value = '';
+    input.focus();
+  }
+}
+async function setAppPin(){
+  const val = document.getElementById('set-pin').value.trim();
+  if(!val){
+    if(appPinHash){ appPinHash = ''; localStorage.removeItem('budget_pin_hash'); toast('PIN removed'); }
+    return;
+  }
+  if(!/^\d{4,8}$/.test(val)){ toast('PIN must be 4–8 digits'); return; }
+  appPinHash = await sha256Hex(val);
+  localStorage.setItem('budget_pin_hash', appPinHash);
+  sessionStorage.setItem('budget_unlocked','1'); // don't lock yourself out right after setting it
+  document.getElementById('set-pin').value = '';
+  toast('PIN set');
 }
 function saveSettings(){
   OWNER = document.getElementById('set-owner').value.trim() || OWNER;
@@ -1444,6 +1527,7 @@ function initDragReorder(){
     const itemSelector = item.classList.contains('rec-item') ? '.rec-item' : '.line';
     const pointerId = e.pointerId;
     item.classList.add('dragging');
+    document.body.classList.add('drag-active');
     try{ handle.setPointerCapture(pointerId); }catch(err){}
 
     const move = ev=>{
@@ -1461,6 +1545,7 @@ function initDragReorder(){
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       item.classList.remove('dragging');
+      document.body.classList.remove('drag-active');
       commitDragOrder(item, itemSelector);
     };
     window.addEventListener('pointermove', move);
@@ -1489,6 +1574,8 @@ function init(){
   renderVersionInfo();
   syncDotUpdate();
   initDragReorder();
+  updateLockScreen();
+  document.getElementById('lock-pin-input').addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
   if(ghToken){ pullFromGitHub(); }
   if(!isOnline) showOfflineBanner(true);
 }
