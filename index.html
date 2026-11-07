@@ -96,7 +96,14 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .week-dates{flex:1;min-width:0}
 .week-range{font-size:.92rem;font-weight:700}
 .week-badge{display:inline-block;font-size:.65rem;font-weight:700;background:var(--accent-light);color:var(--accent-text);padding:1px 7px;border-radius:8px;margin-left:6px;vertical-align:middle;letter-spacing:.02em}
+.week-badge.this{background:var(--ink);color:#fff}
 .week-badge.projected{background:var(--bg-alt);color:var(--ink-faint)}
+.week-badge.planned{background:var(--accent-light);color:var(--accent-text)}
+.week-badge.confirmed{background:var(--accent);color:#fff}
+.section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin:.9rem 0 .45rem}
+.past-toggle{display:block;width:100%;background:none;border:1px dashed var(--border-mid);color:var(--ink-mid);padding:.55rem;border-radius:var(--radius);cursor:pointer;font-size:.8rem;font-weight:600;margin-bottom:.7rem}
+.past-toggle:hover{border-color:var(--accent);color:var(--accent-text)}
+.past-weeks .week{opacity:.85}
 .week-nums{display:flex;gap:1rem;align-items:baseline}
 .week-num{text-align:right}
 .week-num .n{font-weight:700;font-size:.95rem;font-family:var(--serif)}
@@ -108,13 +115,25 @@ header{height:var(--header);background:var(--ink);display:flex;align-items:cente
 .week-body{display:none;border-top:1px solid var(--border);padding:.9rem 1rem 1.1rem}
 .week.open .week-body{display:block}
 
-.line-group-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);font-weight:800;margin:.8rem 0 .4rem}
+.line-group-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);font-weight:800;margin:.8rem 0 .4rem;display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+.lg-total{font-family:var(--serif);font-size:.98rem;font-weight:600;text-transform:none;letter-spacing:0}
 .line-group{border:1px solid var(--border);border-radius:10px;padding:.6rem .7rem .35rem;margin-bottom:.7rem}
 .line-group.income{border-color:rgba(31,138,112,.28)}
 .line-group.expense{border-color:rgba(196,84,58,.28)}
+.line-group.savings{border-color:var(--border-mid);padding:.6rem .7rem}
 .line-group .line-group-title{margin:0 0 .45rem;padding-bottom:.35rem;border-bottom:1px solid var(--border-mid)}
+.line-group.savings .line-group-title{margin:0;padding:0;border-bottom:none}
 .line-group.income .line-group-title{color:var(--accent-text)}
 .line-group.expense .line-group-title{color:var(--neg-text)}
+.line-group.savings .lg-total.pos{color:var(--accent-text)}
+.line-group.savings .lg-total.neg{color:var(--neg-text)}
+.carry-line{display:flex;align-items:center;gap:.5rem;font-size:.86rem;padding:0 .7rem .6rem;color:var(--ink-mid)}
+.carry-line .line-name{font-weight:600}
+.oo-edit{cursor:pointer}
+.oo-edit svg{width:11px;height:11px;stroke:var(--ink-faint);fill:none;stroke-width:2;vertical-align:-1px;margin-left:4px}
+.confirm-btn{display:block;width:100%;margin-top:.9rem;border:1px solid var(--accent);background:var(--card);color:var(--accent-text);border-radius:9px;padding:.55rem;font-size:.82rem;font-weight:700;cursor:pointer}
+.confirm-btn.done{background:var(--accent);color:#fff}
+.cal-spread{grid-column:1/-1;font-size:.68rem;color:var(--ink-mid);background:var(--bg-alt);border-radius:6px;padding:3px 6px;margin-bottom:2px}
 .cal-nav-btn{background:var(--bg-alt);border:1px solid var(--border);color:var(--ink);width:32px;height:32px;border-radius:8px;font-size:1.1rem;cursor:pointer;flex-shrink:0;line-height:1}
 .cal-nav-btn:disabled{opacity:.35;cursor:not-allowed}
 .cal-nav-btn:hover:not(:disabled){background:var(--accent-light);color:var(--accent-text);border-color:var(--accent)}
@@ -160,10 +179,6 @@ body.drag-active{-webkit-user-select:none;user-select:none}
   .oneoff-row input.oo-name{flex:1 1 100%}
 }
 
-.week-totals{display:flex;justify-content:space-between;margin-top:.9rem;padding-top:.7rem;border-top:1px dashed var(--border-mid);font-size:.86rem}
-.week-totals .t{text-align:center;flex:1}
-.week-totals .t .n{font-weight:700;font-family:var(--serif);font-size:1.02rem}
-.week-totals .t .l{font-size:.65rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
 
 .loadmore{display:block;width:100%;background:var(--card);border:1px dashed var(--border-mid);color:var(--ink-mid);padding:.7rem;border-radius:var(--radius);cursor:pointer;font-size:.84rem;font-weight:600;margin-top:.3rem}
 .loadmore:hover{border-color:var(--accent);color:var(--accent-text)}
@@ -257,7 +272,7 @@ body.drag-active{-webkit-user-select:none;user-select:none}
     <div class="summary-value" id="cur-week-savings">$0</div>
     <div class="summary-sub" id="cur-week-sub">—</div>
     <svg class="spark" id="spark" viewBox="0 0 600 92" preserveAspectRatio="none"></svg>
-    <div class="legend"><span><i style="background:#1F8A70"></i>Dated income</span><span><i style="background:#C4543A"></i>Dated expense</span><span><i style="background:#B8AF9A"></i>Projected (not yet reviewed)</span></div>
+    <div class="legend"><span><i style="background:#1F8A70"></i>Income</span><span><i style="background:#C4543A"></i>Expense</span><span><i style="background:#B8AF9A"></i>Projected (not yet planned)</span></div>
   </div>
 
   <div class="toolbar">
@@ -269,6 +284,7 @@ body.drag-active{-webkit-user-select:none;user-select:none}
     </button>
   </div>
 
+  <div id="past-section"></div>
   <div id="weeks"></div>
   <button class="loadmore" id="loadmore-btn" onclick="loadMoreWeeks()">Show more weeks</button>
 </div>
@@ -291,7 +307,7 @@ body.drag-active{-webkit-user-select:none;user-select:none}
       <input id="set-token" type="password" placeholder="github_pat_...">
       <div class="field-note">Stored only in this browser's local storage — never written into this file.</div>
     </div>
-    <div class="field-note" style="margin-bottom:.85rem">Budget starts Monday 17 Aug 2026 (Sydney time) — fixed, and not editable here. To set your actual starting balance, edit the "Savings" line directly in Week 1.</div>
+    <div class="field-note" style="margin-bottom:.85rem">Budget starts Monday 17 Aug 2026 (Sydney time) — fixed, and not editable here. To set your actual starting balance, edit the "Starting balance" line in the first week (under Past weeks).</div>
     <div class="modal-actions">
       <button class="btn primary" onclick="saveSettings()">Save & sync</button>
     </div>
@@ -357,8 +373,19 @@ body.drag-active{-webkit-user-select:none;user-select:none}
       <div class="field"><label>Amount</label><input id="ri-amount" type="number" step="0.01"></div>
       <div class="field"><label>First occurs</label><input id="ri-anchor" type="date"></div>
     </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Timing</label>
+        <select id="ri-timing">
+          <option value="date">On its date</option>
+          <option value="spread">Spread across the week</option>
+        </select>
+      </div>
+      <div class="field"><label>Ends on (optional)</label><input id="ri-end" type="date"></div>
+    </div>
+    <div class="field-note" style="margin:-.5rem 0 .85rem">"Spread across the week" suits budgets like Spending that aren't tied to a day — the chart draws them as a steady daily drawdown. With an end date, nothing from this item appears after that day.</div>
     <div class="checkline">
-      <input type="checkbox" id="ri-variable"> Variable (budget target — actual can differ each week)
+      <input type="checkbox" id="ri-variable"> Adjustable per week (amount can be changed for individual weeks)
     </div>
     <div class="modal-actions">
       <button class="btn danger" id="ri-delete-btn" onclick="deleteRecItem()">Delete</button>
@@ -405,6 +432,28 @@ body.drag-active{-webkit-user-select:none;user-select:none}
   </div>
 </div>
 
+<!-- EDIT ONE-OFF MODAL -->
+<div class="modal-bg" id="oneoff-modal">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Edit one-off</div><button class="modal-close" onclick="closeModal('oneoff-modal')">&times;</button></div>
+    <input type="hidden" id="eoo-id"><input type="hidden" id="eoo-week">
+    <div class="field"><label>Name</label><input id="eoo-name"></div>
+    <div class="field-row">
+      <div class="field"><label>Type</label><select id="eoo-kind"><option value="expense">Expense</option><option value="income">Income</option></select></div>
+      <div class="field"><label>Amount</label><input id="eoo-amt" type="number" step="0.01"></div>
+    </div>
+    <div class="field">
+      <label>Date (optional)</label>
+      <input id="eoo-date" type="date">
+      <div class="field-note">Leave blank for "sometime this week" — it's placed on the Sunday. Picking a date in another week moves it there.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" onclick="deleteOneOffFromModal()">Delete</button>
+      <button class="btn primary" onclick="saveOneOffEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div id="lock-screen">
@@ -420,13 +469,31 @@ body.drag-active{-webkit-user-select:none;user-select:none}
 <script>
 // ───────────────────────── CONFIG ─────────────────────────
 const PATH = 'budget-data.json';
-const MAX_WEEKS = 26; // ~6 months — deliberate constraint while the app is still evolving
+const START_DATE = '2026-08-17'; // hard-coded: Monday, 17 Aug 2026, Australia/Sydney — not user-editable
+// Rolling planning horizon: you can always see/plan this many weeks from the current week onward.
+// (Was a fixed 26 weeks from START_DATE before v2.0.0, which would have run out in Feb 2027.)
+const HORIZON_WEEKS = 26;
+const DAY_MS = 86400000;
 
 // ───────────────────────── VERSION ─────────────────────────
 // Bump on every deploy-worthy change and add a matching entry so it's obvious (via the header
 // badge and Settings → About) when the live file has actually updated, and what changed.
-const APP_VERSION = '1.4.2';
+const APP_VERSION = '2.0.0';
 const CHANGELOG = [
+  { version:'2.0.0', date:'2026-11-07', notes:[
+    'Fixed "This week" pointing at the previous week since daylight saving started (4 Oct) — week maths now counts calendar days instead of raw milliseconds, which came up an hour short across the DST change',
+    'Home now starts at This week; earlier weeks are tucked under a "Show past weeks" toggle (still fully editable)',
+    'Planning window is now rolling — always 26 weeks ahead of the current week, instead of ending in Feb 2027',
+    'Week cards reworked: Income / Expenses boxes show their totals in the header row, a new Savings box shows income − expenses for the week, and last week\'s balance is a separate "Carried over" line instead of being counted as income. Card header shows Saved (this week) and Balance (end of week). The bottom totals row is gone.',
+    'Week status pills: grey "Projected" (untouched), green "Planned" (you\'ve made edits), solid "Confirmed ✓" via a new Confirm week button. Editing a confirmed week keeps it confirmed; tap again to un-confirm.',
+    'Adjustable recurring items (e.g. Groceries) now always default to their standard amount — no more auto-averaging into future weeks, and no avg/budget hints cluttering the rows',
+    'Recurring items can have an end date, and a "Spread across the week" timing for weekly budgets like Spending — drawn on the chart as a steady daily drawdown and shown as a weekly strip in the calendar',
+    'One-offs can now be edited after creation (tap the name) — including their date, which moves them to the right week',
+    'Removed date tags under line items (the calendar shows dates). Undated one-offs now count on the Sunday of their week.',
+    'Chart: legend reads Income / Expense; items on the same day are combined into one dot whose tooltip lists all of them (previously overlapping dots hid all but one)',
+    'Sync: if this phone has newer data than GitHub (e.g. after fixing an expired token), pressing Sync now uploads it straight away instead of waiting for your next edit; the 401 error now says the token has likely expired',
+    'Fixed: a recurring item landing twice in one week (after moving a date) was only counted once; moving "all future occurrences" a second time replaced the first move; calendar showed standard amounts instead of per-week amounts and still showed skipped items; deleting a recurring item left its per-week edits behind; importing a backup didn\'t check the file first'
+  ]},
   { version:'1.4.2', date:'2026-08-16', notes:[
     'Fixed drag-and-drop on iPhone: touching the handle showed the "picked up" border/shadow correctly, but moving your finger just scrolled the page instead of reordering — the pointermove listener now blocks the default scroll itself (touch-action:none on the handle alone wasn\'t enough on iOS Safari), registered non-passive so the fix actually takes effect'
   ]},
@@ -485,8 +552,9 @@ function rnd(min, max, step){
   return Math.round(v/step)*step;
 }
 function defaultState(){
-  const start = '2026-08-17'; // hard-coded: Monday, 17 Aug 2026, Australia/Sydney — not user-editable, see Settings
+  const start = START_DATE;
   return {
+    schemaVersion: 2,
     updatedAt: Date.now(),
     settings: {
       startDate: start,
@@ -508,14 +576,42 @@ function defaultState(){
   };
 }
 function mkRec(name, kind, cadence, amount, variable, anchorDate){
-  return {id: 'r'+Math.random().toString(36).slice(2,9), name, kind, cadence, amount:+amount, variable:!!variable, anchorDate, active:true};
+  return {id: 'r'+Math.random().toString(36).slice(2,9), name, kind, cadence, amount:+amount, variable:!!variable, anchorDate, active:true, timing:'date', endDate:null, shifts:[], exceptions:[]};
 }
+// weekBucket() creates the bucket (use when mutating); readBucket() never touches state (use when
+// computing/rendering, so merely viewing a week doesn't litter state.weeks with empty buckets).
+const EMPTY_BUCKET = Object.freeze({oneOffs:Object.freeze([]), overrides:Object.freeze({}), skipped:Object.freeze([])});
 function weekBucket(idx){
   if(!state.weeks[idx]) state.weeks[idx] = {oneOffs:[], overrides:{}, skipped:[]};
   return state.weeks[idx];
 }
+function readBucket(idx){ return state.weeks[idx] || EMPTY_BUCKET; }
 
-let state = loadLocal() || defaultState();
+// Upgrades any older saved state (local, pulled from GitHub, or imported) to the current shape.
+// Returns null if the data doesn't look like a budget at all.
+function normalizeState(s){
+  if(!s || typeof s!=='object' || !Array.isArray(s.recurring) || !s.weeks || typeof s.weeks!=='object') return null;
+  s.settings = Object.assign({startDate:START_DATE, initialSavings:0, weeksToShow:10, chartRange:12}, s.settings||{});
+  if((s.schemaVersion||1) < 2){
+    s.settings.weeksToShow = 10; // meaning changed: now counts weeks from This week, not from the start date
+  }
+  s.recurring.forEach(r=>{
+    r.shifts = r.shifts || [];
+    if(r.shiftFrom && r.shiftDelta) r.shifts.push({from:r.shiftFrom, delta:r.shiftDelta});
+    delete r.shiftFrom; delete r.shiftDelta;
+    r.exceptions = r.exceptions || [];
+    if(!r.timing) r.timing = 'date';
+    if(r.endDate===undefined) r.endDate = null;
+    if(r.active===undefined) r.active = true;
+  });
+  Object.values(s.weeks).forEach(b=>{
+    b.oneOffs = b.oneOffs || []; b.overrides = b.overrides || {}; b.skipped = b.skipped || [];
+  });
+  s.schemaVersion = 2;
+  return s;
+}
+
+let state = normalizeState(loadLocal()) || defaultState();
 
 function loadLocal(){
   try{ const raw = localStorage.getItem('budget_state'); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
@@ -550,6 +646,12 @@ function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function addMonths(d,n){ const r=new Date(d); r.setMonth(r.getMonth()+n); return r; }
 function mondayOnOrBefore(d){ const r=new Date(d); const day=r.getDay(); const diff=(day===0?6:day-1); r.setDate(r.getDate()-diff); r.setHours(0,0,0,0); return r; }
+// Whole calendar days from a to b. Rounded, NOT floored: across a daylight-saving change two local
+// midnights are 23 or 25 hours apart, and flooring raw ms is what made "This week" lag a week after
+// Sydney DST started. Always use this (or weekIndexOf) for date differences.
+function daysBetween(a,b){ return Math.round((b-a)/DAY_MS); }
+function weekIndexOf(d){ return Math.floor(daysBetween(parseISO(state.settings.startDate), d)/7); }
+function weekStartOf(idx){ return addDays(parseISO(state.settings.startDate), idx*7); }
 function fmtRange(start,end){
   const opts={month:'short',day:'numeric'};
   const sameMonth = start.getMonth()===end.getMonth();
@@ -562,20 +664,12 @@ function fmtMoney(n){
 }
 
 // ───────────────────────── OCCURRENCE LOGIC ─────────────────────────
-function avgActual(itemId){
-  const vals=[];
-  Object.values(state.weeks).forEach(w=>{
-    if(w.overrides && w.overrides[itemId]!=null) vals.push(w.overrides[itemId]);
-  });
-  if(!vals.length) return null;
-  return vals.reduce((a,b)=>a+b,0)/vals.length;
-}
-
-function todayWeekIndex(){
-  const start = parseISO(state.settings.startDate);
-  const diff = Math.floor((mondayOnOrBefore(nowSydney()) - start)/(7*86400000));
-  return diff;
-}
+function todayWeekIndex(){ return weekIndexOf(nowSydney()); }
+// First week shown on the home screen (This week, or week 0 if the budget hasn't started yet)
+function homeWeekIndex(){ return Math.max(0, todayWeekIndex()); }
+// Last week you can see/plan — rolling HORIZON_WEEKS window from the current week
+function lastWeekIndex(){ return homeWeekIndex() + HORIZON_WEEKS - 1; }
+function lastWindowDate(){ return addDays(weekStartOf(lastWeekIndex()), 6); }
 
 // Sorts lines in place to match a saved drag-reorder id list; anything not in the list keeps
 // its existing relative position (Array#sort is stable), so new/unordered items just trail along.
@@ -585,11 +679,13 @@ function applyOrder(lines, order){
 }
 
 // ───────────────────────── COMPUTE ─────────────────────────
-function computeWeek(idx, priorSavings){
-  const start = parseISO(state.settings.startDate);
-  const weekStart = addDays(start, idx*7);
+// Money model (v2): each week starts from `carriedOver` (last week's end balance, or the
+// initial savings for week 0 — overridable via overrides._rollover). Income and expenses are the
+// week's real flows only; `savings` = income − expenses for the week; `endBalance` = carriedOver + savings.
+function computeWeek(idx, priorBalance){
+  const weekStart = weekStartOf(idx);
   const weekEnd = addDays(weekStart,6);
-  const bucket = weekBucket(idx);
+  const bucket = readBucket(idx);
   const curIdx = todayWeekIndex();
 
   const incomeLines=[], expenseLines=[];
@@ -599,29 +695,24 @@ function computeWeek(idx, priorSavings){
     if(bucket.skipped.includes(item.id)) return;
     const occDates = occurrenceDatesInRange(item, weekStart, weekEnd);
     if(!occDates.length) return;
-    let amount = item.amount;
+    // Every occurrence this week counts (normally 1; can be 2 after moving a date into this week).
+    // A per-week override replaces the week's total for the item (adjustable items only via the UI).
     const ov = bucket.overrides[item.id];
-    if(item.variable){
-      if(ov!=null) amount = ov;
-      else if(idx > curIdx){ const a = avgActual(item.id); if(a!=null) amount = a; }
-    } else if(ov!=null){
-      amount = ov;
-    }
-    // occurDate is the item's actual occurrence date this week — used for the balance chart.
-    // Kept separate from the user-facing "date" tag (one-offs only) so recurring items don't
-    // suddenly grow a date badge in the week list.
-    const line = {id:item.id, name:item.name, amount, variable:item.variable, budgeted:item.amount, recurring:true, occurDate:fmtISO(occDates[0])};
+    const amount = ov!=null ? ov : item.amount*occDates.length;
+    const line = {id:item.id, name:item.name, amount, recurring:true, editable:!!item.variable,
+      timing:item.timing||'date', occurDates:occDates.map(fmtISO)};
     (item.kind==='income'?incomeLines:expenseLines).push(line);
   });
 
   bucket.oneOffs.forEach(o=>{
-    const line = {id:o.id, name:o.name, amount:o.amount, recurring:false, date:o.date||null, occurDate:o.date||fmtISO(weekStart)};
+    // Undated one-offs ("sometime this week") count on the Sunday.
+    const line = {id:o.id, name:o.name, amount:o.amount, recurring:false, editable:true, timing:'date',
+      occurDates:[o.date||fmtISO(weekEnd)]};
     (o.kind==='income'?incomeLines:expenseLines).push(line);
   });
 
   const rolloverOv = bucket.overrides['_rollover'];
-  const rolloverAmount = rolloverOv!=null ? rolloverOv : priorSavings;
-  incomeLines.push({id:'_rollover', name: idx===0?'Savings':'Savings (rollover)', amount:rolloverAmount, recurring:true, rollover:true});
+  const carriedOver = rolloverOv!=null ? rolloverOv : priorBalance;
 
   if(bucket.order && bucket.order.length){
     applyOrder(incomeLines, bucket.order);
@@ -632,73 +723,98 @@ function computeWeek(idx, priorSavings){
   const expenseTotal = expenseLines.reduce((a,l)=>a+l.amount,0);
   const savings = incomeTotal - expenseTotal;
 
-  // A week counts as "reviewed" once it has any actual per-week data — an override, a one-off,
-  // or a skip. Otherwise it's still just the recurring defaults projected forward untouched.
-  const hasActuals = bucket.oneOffs.length>0 || bucket.skipped.length>0 || Object.keys(bucket.overrides).length>0;
+  // Status: "projected" = untouched recurring defaults; "planned" = any per-week edit (override,
+  // one-off, skip); "confirmed" = you've explicitly marked the week as fully planned. Editing a
+  // confirmed week keeps it confirmed (plans change on the fly — no nagging).
+  const hasEdits = bucket.oneOffs.length>0 || bucket.skipped.length>0 || Object.keys(bucket.overrides).length>0;
+  const status = bucket.confirmed ? 'confirmed' : hasEdits ? 'planned' : 'projected';
 
-  return {idx, weekStart, weekEnd, incomeLines, expenseLines, incomeTotal, expenseTotal, savings, isCurrent: idx===curIdx, hasActuals};
+  return {idx, weekStart, weekEnd, carriedOver, carriedOverridden: rolloverOv!=null, incomeLines, expenseLines,
+    incomeTotal, expenseTotal, savings, endBalance: carriedOver + savings, isCurrent: idx===curIdx, status};
 }
 
 function computeAll(n){
   const out=[];
-  let savings = state.settings.initialSavings;
+  let balance = state.settings.initialSavings;
   for(let i=0;i<n;i++){
-    const w = computeWeek(i, savings);
+    const w = computeWeek(i, balance);
     out.push(w);
-    savings = w.savings;
+    balance = w.endBalance;
   }
   return out;
 }
 
 // ───────────────────────── RENDER ─────────────────────────
 let openWeeks = new Set();
-const RANGE_OPTIONS = [{label:'1W', n:1}, {label:'4W', n:4}, {label:'12W', n:12}, {label:'6MO', n:MAX_WEEKS}];
+let showPast = false; // session-only: whether the archived past weeks are expanded
+const RANGE_OPTIONS = [{label:'1W', n:1}, {label:'4W', n:4}, {label:'12W', n:12}, {label:'6MO', n:HORIZON_WEEKS}];
 
 function render(){
-  const n = state.settings.weeksToShow;
-  const weeks = computeAll(n);
+  const homeIdx = homeWeekIndex();
+  const lastIdx = lastWeekIndex();
+  const all = computeAll(lastIdx+1); // computed once, shared by the chart and the week list
 
   // ── chart / summary period (independent of the week list below) ──
-  const chartStart = Math.max(0, todayWeekIndex());
-  const startDate = parseISO(state.settings.startDate);
+  const chartStart = homeIdx;
   let chartEnd;
   if(state.settings.chartEndDate){
-    const endIdx = Math.floor((parseISO(state.settings.chartEndDate) - startDate)/(7*86400000));
-    chartEnd = Math.min(MAX_WEEKS-1, Math.max(chartStart, endIdx));
+    chartEnd = Math.min(lastIdx, Math.max(chartStart, weekIndexOf(parseISO(state.settings.chartEndDate))));
   } else {
     const chartRange = state.settings.chartRange || 12;
-    chartEnd = Math.min(MAX_WEEKS-1, chartStart + chartRange - 1);
+    chartEnd = Math.min(lastIdx, chartStart + chartRange - 1);
   }
-  const fullForChart = computeAll(chartEnd+1);
-  const rangeWeeks = fullForChart.slice(chartStart, chartEnd+1);
+  const rangeWeeks = all.slice(chartStart, chartEnd+1);
   const first = rangeWeeks[0], last = rangeWeeks[rangeWeeks.length-1];
-  const rolloverAtStart = first.incomeLines.find(l=>l.id==='_rollover').amount;
-  const accrued = last.savings - rolloverAtStart;
-  const totalIncome = rangeWeeks.reduce((a,w)=>a + w.incomeTotal - w.incomeLines.find(l=>l.id==='_rollover').amount, 0);
+  const accrued = rangeWeeks.reduce((a,w)=>a + w.savings, 0);
+  const totalIncome = rangeWeeks.reduce((a,w)=>a + w.incomeTotal, 0);
   const totalExpenses = rangeWeeks.reduce((a,w)=>a + w.expenseTotal, 0);
 
   const sv = document.getElementById('cur-week-savings');
   sv.textContent = fmtMoney(accrued);
   sv.className = 'summary-value ' + (accrued<0?'neg':'pos');
   document.getElementById('cur-week-sub').textContent =
-    `${fmtRange(first.weekStart,last.weekEnd)} · Income ${fmtMoney(totalIncome)} · Expenses ${fmtMoney(totalExpenses)}`;
+    `${fmtRange(first.weekStart,last.weekEnd)} · Income ${fmtMoney(totalIncome)} · Expenses ${fmtMoney(totalExpenses)} · Balance ${fmtMoney(last.endBalance)}`;
 
   const rt = document.getElementById('range-toggle');
   const customEnd = !!state.settings.chartEndDate;
   const chartRange = state.settings.chartRange || 12;
-  const dateMin = fmtISO(addDays(startDate, chartStart*7));
-  const dateMax = fmtISO(addDays(startDate, MAX_WEEKS*7 - 1));
+  const dateMin = fmtISO(weekStartOf(chartStart));
+  const dateMax = fmtISO(lastWindowDate());
   rt.innerHTML = RANGE_OPTIONS.map(o=>`<button class="range-btn${!customEnd && chartRange===o.n?' active':''}" onclick="setChartRange(${o.n})">${o.label}</button>`).join('')
     + `<input type="date" class="range-date${customEnd?' active':''}" id="chart-end-date" value="${state.settings.chartEndDate||''}" min="${dateMin}" max="${dateMax}" title="Show savings up to a specific date" onchange="setChartEndDate(this.value)">`;
 
   renderSpark(rangeWeeks);
 
+  // ── past weeks (archived, collapsed by default, newest first) ──
+  const past = document.getElementById('past-section');
+  past.innerHTML = '';
+  if(homeIdx > 0){
+    const btn = document.createElement('button');
+    btn.className = 'past-toggle';
+    btn.textContent = showPast ? 'Hide past weeks' : `Show ${homeIdx} past week${homeIdx===1?'':'s'}`;
+    btn.onclick = ()=>{ showPast = !showPast; render(); };
+    past.appendChild(btn);
+    if(showPast){
+      const wrap = document.createElement('div');
+      wrap.className = 'past-weeks';
+      wrap.innerHTML = '<div class="section-label">Past weeks</div>';
+      all.slice(0, homeIdx).reverse().forEach(w=>wrap.appendChild(renderWeekCard(w)));
+      const lbl = document.createElement('div');
+      lbl.className = 'section-label';
+      lbl.textContent = 'This week onward';
+      wrap.appendChild(lbl);
+      past.appendChild(wrap);
+    }
+  }
+
+  // ── upcoming weeks, starting at This week ──
+  const upto = Math.min(lastIdx, homeIdx + state.settings.weeksToShow - 1);
   const container = document.getElementById('weeks');
   container.innerHTML = '';
-  weeks.forEach(w=>container.appendChild(renderWeekCard(w)));
+  all.slice(homeIdx, upto+1).forEach(w=>container.appendChild(renderWeekCard(w)));
 
   const lm = document.getElementById('loadmore-btn');
-  lm.style.display = state.settings.weeksToShow >= MAX_WEEKS ? 'none' : '';
+  lm.style.display = upto >= lastIdx ? 'none' : '';
 
   syncDotUpdate();
 }
@@ -734,56 +850,80 @@ function niceTicks(min, max, targetCount){
 
 function renderSpark(weeks){
   const svg = document.getElementById('spark');
-  const rangeStartDate = weeks[0].weekStart;
-  const rangeEndDate = weeks[weeks.length-1].weekEnd;
-  const totalMs = rangeEndDate - rangeStartDate;
-
-  // Walk every dated event (recurring occurrences + one-offs) across the range in order, so the
-  // line actually dips/rises as things happen rather than just jumping once per week.
-  let balance = weeks[0].incomeLines.find(l=>l.id==='_rollover').amount;
-  const points = [{date:rangeStartDate, balance, kind:null, hasActuals:weeks[0].hasActuals}];
-  const events = [];
-  weeks.forEach(w=>{
-    [['income',w.incomeLines],['expense',w.expenseLines]].forEach(([kind,lines])=>{
+  const rangeStart = weeks[0].weekStart;
+  const totalDays = weeks.length*7;
+  // Time axis is in days from rangeStart (no raw-ms maths → no DST drift). Dated items sit at
+  // midday of their day; "spread" items drain linearly across their week's 7 days.
+  const byDay = new Map();   // day offset → {date, items[], delta}  (all same-day items share one dot)
+  const spreads = [];        // {t0, t1, rate}
+  const adjusts = new Map(); // week-start day → step for a manually adjusted carried-over balance
+  weeks.forEach((w,wi)=>{
+    const t0 = wi*7;
+    if(wi>0 && w.carriedOverridden) adjusts.set(t0, w.carriedOver - weeks[wi-1].endBalance);
+    [['income',w.incomeLines,1],['expense',w.expenseLines,-1]].forEach(([kind,lines,sign])=>{
       lines.forEach(l=>{
-        if(l.rollover) return;
-        events.push({date:parseISO(l.occurDate), kind, name:l.name, amount:l.amount, hasActuals:w.hasActuals});
+        if(l.timing==='spread'){ spreads.push({t0, t1:t0+7, rate:sign*l.amount/7}); return; }
+        const per = l.amount/l.occurDates.length;
+        l.occurDates.forEach(iso=>{
+          const d = daysBetween(rangeStart, parseISO(iso));
+          if(d<0 || d>=totalDays) return;
+          let g = byDay.get(d);
+          if(!g){ g = {date:parseISO(iso), items:[], delta:0}; byDay.set(d,g); }
+          g.items.push({kind, name:l.name, amount:per});
+          g.delta += sign*per;
+        });
       });
     });
   });
-  events.sort((a,b)=>a.date-b.date);
-  events.forEach(e=>{
-    balance += (e.kind==='income' ? e.amount : -e.amount);
-    points.push({date:e.date, balance, kind:e.kind, name:e.name, amount:e.amount, hasActuals:e.hasActuals});
+
+  const rateAt = t => spreads.reduce((a,s)=> a + (t>=s.t0 && t<s.t1 ? s.rate : 0), 0);
+  const bps = new Set([0, totalDays]);
+  spreads.forEach(s=>{ bps.add(s.t0); bps.add(s.t1); });
+  adjusts.forEach((_,t)=>bps.add(t));
+  byDay.forEach((_,d)=>bps.add(d+0.5));
+  const times = [...bps].sort((a,b)=>a-b);
+
+  let balance = weeks[0].carriedOver;
+  const points = [{t:0, v:balance}];
+  const dotGroups = [];
+  times.forEach((t,i)=>{
+    if(i>0){ const prev = times[i-1]; balance += rateAt((prev+t)/2)*(t-prev); points.push({t, v:balance}); }
+    if(adjusts.has(t)){ balance += adjusts.get(t); points.push({t, v:balance}); }
+    const g = Number.isInteger(t) ? null : byDay.get(t-0.5);
+    if(g){ balance += g.delta; points.push({t, v:balance}); dotGroups.push({t, v:balance, g}); }
   });
 
-  const vals = points.map(p=>p.balance);
+  const vals = points.map(p=>p.v);
   const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
   const {ticks, niceMin, niceMax} = niceTicks(rawMin, rawMax, 4);
   const range = (niceMax-niceMin)||1;
   const W=600,H=98, padL=50, padB=24, padT=8;
   const plotW = W-padL, plotH = H-padB-padT;
-  const xFor = d => padL + (totalMs>0 ? ((d-rangeStartDate)/totalMs)*plotW : 0);
+  const xFor = t => padL + (t/totalDays)*plotW;
   const yFor = v => padT + plotH - ((v-niceMin)/range)*plotH;
+  const statusAt = t => weeks[Math.min(weeks.length-1, Math.max(0, Math.floor(t/7)))].status;
 
   // Drawn as individual segments (not one polyline) so the portion covering weeks you haven't
-  // actually reviewed yet (still just recurring defaults) can render dashed/muted instead of
-  // solid — a visual cue for how far the projection can actually be trusted.
+  // planned yet (still just recurring defaults) can render dashed/muted instead of solid.
   let lineSegs = '';
   for(let i=1;i<points.length;i++){
     const a = points[i-1], b = points[i];
-    const reviewed = b.hasActuals;
-    lineSegs += `<line x1="${xFor(a.date)}" y1="${yFor(a.balance)}" x2="${xFor(b.date)}" y2="${yFor(b.balance)}" stroke="${reviewed?'#1F8A70':'#B8AF9A'}" stroke-width="2" stroke-linecap="round" ${reviewed?'':'stroke-dasharray="4,3"'}/>`;
+    const reviewed = statusAt((a.t+b.t)/2) !== 'projected';
+    lineSegs += `<line x1="${xFor(a.t)}" y1="${yFor(a.v)}" x2="${xFor(b.t)}" y2="${yFor(b.v)}" stroke="${reviewed?'#1F8A70':'#B8AF9A'}" stroke-width="2" stroke-linecap="round" ${reviewed?'':'stroke-dasharray="4,3"'}/>`;
   }
-  const dots = points.map(p=>{
-    if(!p.kind) return `<circle cx="${xFor(p.date)}" cy="${yFor(p.balance)}" r="2" fill="#1F8A70"/>`;
-    const color = p.kind==='income' ? '#1F8A70' : '#C4543A';
-    return `<circle cx="${xFor(p.date)}" cy="${yFor(p.balance)}" r="3" fill="${color}" stroke="#fff" stroke-width="1"><title>${esc(p.name)} — ${fmtMoney(p.amount)} (${p.date.toLocaleDateString('en-AU',{day:'numeric',month:'short'})})</title></circle>`;
+  const dots = `<circle cx="${xFor(0)}" cy="${yFor(points[0].v)}" r="2" fill="#1F8A70"/>` + dotGroups.map(({t,v,g})=>{
+    const color = g.delta>=0 ? '#1F8A70' : '#C4543A';
+    const lines = g.items.map(it=>`${it.kind==='income'?'+':'−'} ${it.name} ${fmtMoney(it.amount)}`);
+    if(g.items.length>1) lines.push(`Net ${g.delta>=0?'+':''}${fmtMoney(g.delta)}`);
+    const tip = esc(`${g.date.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})}\n${lines.join('\n')}`);
+    // Larger invisible circle on top = easier hover/tap target for the tooltip
+    return `<circle cx="${xFor(t)}" cy="${yFor(v)}" r="3" fill="${color}" stroke="#fff" stroke-width="1"/>`
+      + `<circle cx="${xFor(t)}" cy="${yFor(v)}" r="8" fill="transparent"><title>${tip}</title></circle>`;
   }).join('');
 
   // A tick for every week in range, however many that is — labels rotated so they don't collide.
-  const xTicks = weeks.map(w=>{
-    const x = xFor(w.weekStart);
+  const xTicks = weeks.map((w,wi)=>{
+    const x = xFor(wi*7);
     return `<line x1="${x}" y1="${H-padB}" x2="${x}" y2="${H-padB+3}" stroke="#B8AF9A" stroke-width="1"/>
       <text x="${x}" y="${H-padB+6}" font-size="7.5" fill="#8C8C7C" text-anchor="end" transform="rotate(-40 ${x} ${H-padB+6})">${w.weekStart.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</text>`;
   }).join('');
@@ -807,27 +947,46 @@ function renderWeekCard(w){
   const div = document.createElement('div');
   div.className = 'week' + (w.isCurrent?' current':'') + (openWeeks.has(w.idx)?' open':'');
   div.dataset.idx = w.idx;
-  const payBadge = w.incomeLines.some(l=>!l.rollover && l.name.toLowerCase().includes('pay')) ? '' : '';
+  const statusPill = {
+    projected: '<span class="week-badge projected">Projected</span>',
+    planned:   '<span class="week-badge planned">Planned</span>',
+    confirmed: '<span class="week-badge confirmed">Confirmed ✓</span>'
+  }[w.status];
+  const resetIcon = '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>';
+  const carryReset = w.carriedOverridden
+    ? `<button class="line-x" title="Reset to calculated" onclick="resetOverride(${w.idx},'_rollover')">${resetIcon}</button>`
+    : '<span style="width:20px;display:inline-block"></span>';
+  const carryVal = round2(w.carriedOver);
 
   div.innerHTML = `
     <div class="week-head" onclick="toggleWeek(${w.idx})">
       <div class="week-dates">
-        <div class="week-range">${fmtRange(w.weekStart,w.weekEnd)}${w.isCurrent?'<span class="week-badge">This week</span>':''}${!w.hasActuals?'<span class="week-badge projected">Projected</span>':''}</div>
+        <div class="week-range">${fmtRange(w.weekStart,w.weekEnd)}${w.isCurrent?'<span class="week-badge this">This week</span>':''}${statusPill}</div>
       </div>
       <div class="week-nums">
-        <div class="week-num"><div class="n">${fmtMoney(w.incomeTotal)}</div><div class="l">Balance</div></div>
         <div class="week-num ${w.savings<0?'neg':'pos'}"><div class="n">${fmtMoney(w.savings)}</div><div class="l">Saved</div></div>
+        <div class="week-num"><div class="n">${fmtMoney(w.endBalance)}</div><div class="l">Balance</div></div>
       </div>
       <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
     </div>
     <div class="week-body">
+      <div class="carry-line">
+        <div class="line-name">${w.idx===0?'Starting balance':'Carried over'}${w.carriedOverridden?' <span class="line-budgeted">manually adjusted</span>':''}</div>
+        <div class="line-amt-wrap">
+          <span class="line-amt-dollar">$</span><input class="line-amt" type="number" size="${Math.max(2,String(carryVal).length)}" value="${carryVal}" onchange="editLine(${w.idx},'_rollover',this.value)" oninput="this.size=Math.max(2,this.value.length)">
+        </div>
+        ${carryReset}
+      </div>
       <div class="line-group income">
-        <div class="line-group-title">Income</div>
-        ${w.incomeLines.map(l=>renderLine(w.idx,l,'income')).join('')}
+        <div class="line-group-title"><span>Income</span><span class="lg-total">${fmtMoney(w.incomeTotal)}</span></div>
+        ${w.incomeLines.length? w.incomeLines.map(l=>renderLine(w.idx,l,'income')).join('') : '<div class="empty" style="padding:.6rem 0">No income this week</div>'}
       </div>
       <div class="line-group expense">
-        <div class="line-group-title">Expenses</div>
+        <div class="line-group-title"><span>Expenses</span><span class="lg-total">${fmtMoney(w.expenseTotal)}</span></div>
         ${w.expenseLines.length? w.expenseLines.map(l=>renderLine(w.idx,l,'expense')).join('') : '<div class="empty" style="padding:.6rem 0">No expenses yet</div>'}
+      </div>
+      <div class="line-group savings">
+        <div class="line-group-title"><span>Savings</span><span class="lg-total ${w.savings<0?'neg':'pos'}">${fmtMoney(w.savings)}</span></div>
       </div>
       <div class="oneoff-divider"></div>
       <div class="oneoff-row">
@@ -840,52 +999,38 @@ function renderWeekCard(w){
         </div>
         <button class="oneoff-add" onclick="addOneOff(${w.idx})">Add</button>
       </div>
-      <div class="week-totals">
-        <div class="t"><div class="n">${fmtMoney(w.incomeTotal)}</div><div class="l">Balance</div></div>
-        <div class="t"><div class="n">${fmtMoney(w.expenseTotal)}</div><div class="l">Expenses</div></div>
-        <div class="t"><div class="n">${fmtMoney(w.savings)}</div><div class="l">Savings</div></div>
-      </div>
+      <button class="confirm-btn${w.status==='confirmed'?' done':''}" onclick="toggleConfirm(${w.idx})">${w.status==='confirmed'?'Confirmed ✓ — tap to un-confirm':'Confirm week — planning complete'}</button>
     </div>
   `;
   return div;
 }
 
 function renderLine(weekIdx, l, type){
-  const isRolloverLine = l.rollover;
-  const bucket = weekBucket(weekIdx);
-  const isOverridden = l.recurring && !isRolloverLine && bucket.overrides[l.id]!=null;
-  const rolloverOverridden = isRolloverLine && bucket.overrides['_rollover']!=null;
-  // Fixed (non-variable) recurring items are locked to their budgeted amount — only variable
-  // items, one-offs, and the savings rollover line can be edited inline, and always per-week only.
-  const editable = isRolloverLine || !l.recurring || l.variable;
-
-  let budgetHint = '';
-  if(l.variable && !isRolloverLine){
-    const avg = avgActual(l.id);
-    const parts = [];
-    if(round2(l.amount)!==round2(l.budgeted)) parts.push(`budget ${fmtMoney(l.budgeted)}`);
-    if(avg!=null) parts.push(`avg ${fmtMoney(avg)}`);
-    if(parts.length) budgetHint = `<span class="line-budgeted">${parts.join(' · ')}</span>`;
-  } else if(rolloverOverridden){
-    budgetHint = `<span class="line-budgeted">manually adjusted</span>`;
-  }
+  const bucket = readBucket(weekIdx);
+  const isOverridden = l.recurring && bucket.overrides[l.id]!=null;
+  // Fixed recurring items are locked to their standard amount — only adjustable recurring items
+  // and one-offs can be edited inline, and always for this week only. No avg/budget hints (v2).
+  const editable = l.editable;
+  const xIcon = '<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+  const resetIcon = '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>';
 
   let removeBtn;
   if(!l.recurring){
-    removeBtn = `<button class="line-x" onclick="removeOneOff(${weekIdx},'${l.id}')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
-  } else if(isRolloverLine){
-    removeBtn = rolloverOverridden ? `<button class="line-x" title="Reset to calculated" onclick="resetOverride(${weekIdx},'_rollover')"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></button>` : '<span style="width:20px;display:inline-block"></span>';
+    removeBtn = `<button class="line-x" title="Remove" onclick="removeOneOff(${weekIdx},'${l.id}')">${xIcon}</button>`;
   } else if(isOverridden){
-    removeBtn = `<button class="line-x" title="Reset to default" onclick="resetOverride(${weekIdx},'${l.id}')"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></button>`;
+    removeBtn = `<button class="line-x" title="Reset to standard amount" onclick="resetOverride(${weekIdx},'${l.id}')">${resetIcon}</button>`;
   } else {
-    removeBtn = `<button class="line-x" title="Skip this week" onclick="toggleSkip(${weekIdx},'${l.id}')"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+    removeBtn = `<button class="line-x" title="Skip this week" onclick="toggleSkip(${weekIdx},'${l.id}')">${xIcon}</button>`;
   }
+
+  const nameHtml = l.recurring
+    ? esc(l.name)
+    : `<span class="oo-edit" onclick="openEditOneOff(${weekIdx},'${l.id}')" title="Edit one-off">${esc(l.name)}<svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>`;
 
   return `
     <div class="line" data-id="${l.id}">
       <svg class="drag-handle" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>
-      <div class="line-name">${esc(l.name)}${l.date?`<span class="tag">${fmtShortDate(parseISO(l.date))}</span>`:''}</div>
-      ${budgetHint}
+      <div class="line-name">${nameHtml}</div>
       <div class="line-amt-wrap">
         ${editable
           ? `<span class="line-amt-dollar ${type}">$</span><input class="line-amt ${type}" type="number" size="${Math.max(2,String(round2(l.amount)).length)}" value="${round2(l.amount)}" onchange="editLine(${weekIdx},'${l.id}',this.value); this.size=Math.max(2,this.value.length)" oninput="this.size=Math.max(2,this.value.length)">`
@@ -935,14 +1080,31 @@ function addOneOff(weekIdx){
   openWeeks.add(weekIdx);
   persist();
 }
-function addOneOffOnDate(dateStr, name, amt, kind){
-  const start = parseISO(state.settings.startDate);
-  const idx = Math.floor((parseISO(dateStr) - start)/(7*86400000));
-  if(idx<0){ toast('That date is before your budget start date'); return; }
-  if(idx>=MAX_WEEKS){ toast('That date is beyond the 6-month window this app currently tracks'); return; }
-  weekBucket(idx).oneOffs.push({id:'o'+Math.random().toString(36).slice(2,9), name, amount:amt, kind, date:dateStr});
-  if(idx >= state.settings.weeksToShow) state.settings.weeksToShow = Math.min(MAX_WEEKS, idx+2);
+function toggleConfirm(weekIdx){
+  const bucket = weekBucket(weekIdx);
+  if(bucket.confirmed) delete bucket.confirmed; else bucket.confirmed = true;
+  openWeeks.add(weekIdx);
+  persist();
+}
+// Validates a date is inside the budget window; returns its week index or null (with a toast).
+function windowWeekIndex(dateStr){
+  const idx = weekIndexOf(parseISO(dateStr));
+  if(idx<0){ toast('That date is before your budget start date'); return null; }
+  if(idx>lastWeekIndex()){ toast(`That date is beyond the ${HORIZON_WEEKS}-week planning window`); return null; }
+  return idx;
+}
+// Makes sure a week is visible on the home screen (expands past weeks / loads more as needed).
+function revealWeek(idx){
+  const homeIdx = homeWeekIndex();
+  if(idx < homeIdx) showPast = true;
+  else if(idx >= homeIdx + state.settings.weeksToShow) state.settings.weeksToShow = idx - homeIdx + 2;
   openWeeks.add(idx);
+}
+function addOneOffOnDate(dateStr, name, amt, kind){
+  const idx = windowWeekIndex(dateStr);
+  if(idx==null) return;
+  weekBucket(idx).oneOffs.push({id:'o'+Math.random().toString(36).slice(2,9), name, amount:amt, kind, date:dateStr});
+  revealWeek(idx);
   persist();
 }
 function removeOneOff(weekIdx, id){
@@ -952,8 +1114,53 @@ function removeOneOff(weekIdx, id){
   persist();
 }
 function loadMoreWeeks(){
-  state.settings.weeksToShow = Math.min(MAX_WEEKS, state.settings.weeksToShow + 8);
+  state.settings.weeksToShow = Math.min(HORIZON_WEEKS, state.settings.weeksToShow + 8);
   persist();
+}
+
+// ───────────────────────── EDIT ONE-OFF ─────────────────────────
+function openEditOneOff(weekIdx, id){
+  const o = readBucket(weekIdx).oneOffs.find(x=>x.id===id);
+  if(!o) return;
+  document.getElementById('eoo-id').value = id;
+  document.getElementById('eoo-week').value = weekIdx;
+  document.getElementById('eoo-name').value = o.name;
+  document.getElementById('eoo-kind').value = o.kind;
+  document.getElementById('eoo-amt').value = o.amount;
+  const d = document.getElementById('eoo-date');
+  d.value = o.date || '';
+  d.min = state.settings.startDate;
+  d.max = fmtISO(lastWindowDate());
+  showModal('oneoff-modal');
+}
+function saveOneOffEdit(){
+  const id = document.getElementById('eoo-id').value;
+  const weekIdx = +document.getElementById('eoo-week').value;
+  const name = document.getElementById('eoo-name').value.trim();
+  const amt = parseFloat(document.getElementById('eoo-amt').value);
+  const date = document.getElementById('eoo-date').value || null;
+  if(!name || !amt){ toast('Enter a name and amount'); return; }
+  const bucket = weekBucket(weekIdx);
+  const o = bucket.oneOffs.find(x=>x.id===id);
+  if(!o) return;
+  let targetIdx = weekIdx;
+  if(date){
+    targetIdx = windowWeekIndex(date);
+    if(targetIdx==null) return;
+  }
+  Object.assign(o, {name, amount:amt, kind:document.getElementById('eoo-kind').value, date});
+  if(targetIdx!==weekIdx){
+    bucket.oneOffs = bucket.oneOffs.filter(x=>x.id!==id);
+    weekBucket(targetIdx).oneOffs.push(o);
+  }
+  revealWeek(targetIdx);
+  closeModal('oneoff-modal');
+  persist();
+  toast(targetIdx!==weekIdx ? 'Moved to week of '+fmtShortDate(weekStartOf(targetIdx)) : 'Saved');
+}
+function deleteOneOffFromModal(){
+  removeOneOff(+document.getElementById('eoo-week').value, document.getElementById('eoo-id').value);
+  closeModal('oneoff-modal');
 }
 
 // ───────────────────────── ADD ONE-OFF (global) ─────────────────────────
@@ -962,22 +1169,21 @@ function openAddOneOff(){
   document.getElementById('aoo-amt').value = '';
   document.getElementById('aoo-kind').value = 'expense';
   document.querySelector('input[name="aoo-mode"][value="week"]').checked = true;
-  const start = parseISO(state.settings.startDate);
-  const n = Math.min(MAX_WEEKS, Math.max(state.settings.weeksToShow, todayWeekIndex()+2));
+  const homeIdx = homeWeekIndex();
   const sel = document.getElementById('aoo-week');
   sel.innerHTML = '';
-  for(let i=0;i<n;i++){
-    const ws = addDays(start,i*7), we = addDays(ws,6);
+  for(let i=0;i<=lastWeekIndex();i++){
+    const ws = weekStartOf(i), we = addDays(ws,6);
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = fmtRange(ws,we) + (i===todayWeekIndex()?' (this week)':'');
-    if(i===todayWeekIndex()) opt.selected = true;
+    if(i===homeIdx) opt.selected = true;
     sel.appendChild(opt);
   }
   const dateInput = document.getElementById('aoo-date');
   dateInput.value = '';
   dateInput.min = state.settings.startDate;
-  dateInput.max = fmtISO(addDays(start, MAX_WEEKS*7-1));
+  dateInput.max = fmtISO(lastWindowDate());
   aooModeChange();
   showModal('addoneoff-modal');
 }
@@ -999,7 +1205,7 @@ function addOneOffGlobal(){
   } else {
     const weekIdx = parseInt(document.getElementById('aoo-week').value,10);
     weekBucket(weekIdx).oneOffs.push({id:'o'+Math.random().toString(36).slice(2,9), name, amount:amt, kind, date:null});
-    openWeeks.add(weekIdx);
+    revealWeek(weekIdx);
     persist();
   }
   closeModal('addoneoff-modal');
@@ -1018,7 +1224,7 @@ function openCalendar(){
   showModal('calendar-modal');
 }
 function calMinMonth(){ const s = parseISO(state.settings.startDate); return new Date(s.getFullYear(), s.getMonth(), 1); }
-function calMaxMonth(){ const s = parseISO(state.settings.startDate); const end = addDays(s, MAX_WEEKS*7-1); return new Date(end.getFullYear(), end.getMonth(), 1); }
+function calMaxMonth(){ const end = lastWindowDate(); return new Date(end.getFullYear(), end.getMonth(), 1); }
 function calShift(delta){
   const next = addMonths(calMonth, delta);
   if(next < calMinMonth() || next > calMaxMonth()) return;
@@ -1044,18 +1250,23 @@ function rawOccurrenceDates(item, rangeStart, rangeEnd){
   return out;
 }
 
+// Order matters: "all future" shifts apply first, in the order they were made (each shift's `from`
+// is the date as displayed at the time, i.e. after earlier shifts); then single-occurrence moves
+// (whose `date` is also a displayed date); then the end date cuts off anything after it.
 function occurrenceDatesInRange(item, rangeStart, rangeEnd){
-  const pad = 60*86400000;
-  const dates = rawOccurrenceDates(item, new Date(+rangeStart-pad), new Date(+rangeEnd+pad));
-  let result = dates;
-  const exceptions = item.exceptions || [];
-  const singleOriginals = new Set(exceptions.filter(e=>e.scope==='single').map(e=>e.date));
-  if(singleOriginals.size) result = result.filter(d=>!singleOriginals.has(fmtISO(d)));
-  if(item.shiftFrom && item.shiftDelta){
-    const shiftFromDate = parseISO(item.shiftFrom);
-    result = result.map(d=> d>=shiftFromDate ? addDays(d,item.shiftDelta) : d);
+  const pad = 60;
+  let result = rawOccurrenceDates(item, addDays(rangeStart,-pad), addDays(rangeEnd,pad));
+  (item.shifts || []).forEach(s=>{
+    const from = parseISO(s.from);
+    result = result.map(d=> d>=from ? addDays(d,s.delta) : d);
+  });
+  const singles = (item.exceptions || []).filter(e=>e.scope==='single');
+  if(singles.length){
+    const moved = new Set(singles.map(e=>e.date));
+    result = result.filter(d=>!moved.has(fmtISO(d)));
+    singles.forEach(e=>result.push(parseISO(e.newDate)));
   }
-  exceptions.filter(e=>e.scope==='single').forEach(e=>{ result.push(parseISO(e.newDate)); });
+  if(item.endDate){ const end = parseISO(item.endDate); result = result.filter(d=>d<=end); }
   result = result.filter(d=>d>=rangeStart && d<=rangeEnd);
   result.sort((a,b)=>a-b);
   return result;
@@ -1072,35 +1283,44 @@ function renderCalendar(){
   const days=[]; let d=new Date(gridStart);
   while(d<=gridEnd){ days.push(new Date(d)); d=addDays(d,1); }
 
+  // Built from computeWeek so the calendar matches the week cards exactly: per-week amounts,
+  // skips, end dates, and undated one-offs (shown on their week's Sunday).
   const dated = {};
-  Object.entries(state.weeks).forEach(([weekIdxStr, bucket])=>{
-    bucket.oneOffs.forEach(o=>{
-      if(!o.date) return;
-      const dd = parseISO(o.date);
-      if(dd<gridStart||dd>gridEnd) return;
-      (dated[o.date] = dated[o.date]||[]).push({name:o.name, amount:o.amount, kind:o.kind, source:'oneoff', oneoffId:o.id, weekIdx:+weekIdxStr});
+  const spreadByWeek = {};
+  const firstIdx = Math.max(0, weekIndexOf(gridStart)), lastIdx = Math.min(lastWeekIndex(), weekIndexOf(gridEnd));
+  for(let wi=firstIdx; wi<=lastIdx; wi++){
+    const w = computeWeek(wi, 0);
+    [['income',w.incomeLines],['expense',w.expenseLines]].forEach(([kind,lines])=>{
+      lines.forEach(l=>{
+        if(l.timing==='spread'){ (spreadByWeek[wi]=spreadByWeek[wi]||[]).push({name:l.name, amount:l.amount, kind}); return; }
+        const per = l.amount/l.occurDates.length;
+        l.occurDates.forEach(iso=>{
+          (dated[iso]=dated[iso]||[]).push(l.recurring
+            ? {name:l.name, amount:per, kind, source:'recurring', itemId:l.id, weekIdx:wi}
+            : {name:l.name, amount:per, kind, source:'oneoff', oneoffId:l.id, weekIdx:wi});
+        });
+      });
     });
-  });
-  state.recurring.forEach(item=>{
-    if(!item.active) return;
-    occurrenceDatesInRange(item, gridStart, gridEnd).forEach(dt=>{
-      const iso = fmtISO(dt);
-      (dated[iso]=dated[iso]||[]).push({name:item.name, amount:item.amount, kind:item.kind, source:'recurring', itemId:item.id});
-    });
-  });
+  }
   calDatedByDay = dated;
 
   const dow=['Mo','Tu','We','Th','Fr','Sa','Su'];
   let html = dow.map(x=>`<div style="text-align:center;font-weight:700;color:var(--ink-faint);padding:4px 0">${x}</div>`).join('');
-  days.forEach(dt=>{
+  days.forEach((dt,i)=>{
     const iso = fmtISO(dt);
     const inMonth = dt.getMonth()===calMonth.getMonth();
     const items = dated[iso]||[];
     const dots = items.slice(0,4).map(it=>`<span style="width:5px;height:5px;border-radius:50%;display:inline-block;background:${it.kind==='income'?'#1F8A70':'#C4543A'};margin:0 1px"></span>`).join('');
-    html += `<div onclick="calDayClick('${iso}')" style="aspect-ratio:1;border:1px solid var(--border);border-radius:7px;padding:3px 4px;cursor:pointer;background:${inMonth?'var(--card)':'var(--bg)'};opacity:${inMonth?1:.4};display:flex;flex-direction:column">
+    const tip = items.map(it=>`${it.kind==='income'?'+':'−'} ${it.name} ${fmtMoney(it.amount)}`).join('\n');
+    html += `<div onclick="calDayClick('${iso}')" title="${esc(tip).replace(/"/g,'&quot;')}" style="aspect-ratio:1;border:1px solid var(--border);border-radius:7px;padding:3px 4px;cursor:pointer;background:${inMonth?'var(--card)':'var(--bg)'};opacity:${inMonth?1:.4};display:flex;flex-direction:column">
       <div style="font-size:.7rem;font-weight:600">${dt.getDate()}</div>
       <div style="margin-top:auto;line-height:0">${dots}</div>
     </div>`;
+    // After each Sunday: a full-width strip for that week's "spread across the week" items
+    if(i%7===6){
+      const spread = spreadByWeek[weekIndexOf(dt)];
+      if(spread) html += `<div class="cal-spread">Across this week: ${spread.map(s=>`${esc(s.name)} ${fmtMoney(s.amount)}`).join(' · ')}</div>`;
+    }
   });
   document.getElementById('cal-grid').innerHTML = html;
 }
@@ -1158,18 +1378,17 @@ function calEditSave(iso, idx){
   const newDate = document.getElementById('cal-edit-date').value;
   if(!newDate){ toast('Pick a date'); return; }
   const it = calDatedByDay[iso][idx];
-  const start = parseISO(state.settings.startDate);
 
   if(it.source==='oneoff'){
-    const newIdx = Math.floor((parseISO(newDate)-start)/(7*86400000));
-    if(newIdx<0 || newIdx>=MAX_WEEKS){ toast('That date is outside the 6-month window'); return; }
+    const newIdx = windowWeekIndex(newDate);
+    if(newIdx==null) return;
     const oldBucket = weekBucket(it.weekIdx);
     const rec = oldBucket.oneOffs.find(o=>o.id===it.oneoffId);
     if(rec){
       oldBucket.oneOffs = oldBucket.oneOffs.filter(o=>o.id!==it.oneoffId);
       rec.date = newDate;
       weekBucket(newIdx).oneOffs.push(rec);
-      openWeeks.add(newIdx);
+      revealWeek(newIdx);
     }
   } else {
     const scope = document.querySelector('input[name="cal-edit-scope"]:checked').value;
@@ -1179,8 +1398,8 @@ function calEditSave(iso, idx){
         item.exceptions = item.exceptions || [];
         item.exceptions.push({date: iso, newDate, scope:'single'});
       } else {
-        item.shiftFrom = iso;
-        item.shiftDelta = Math.round((parseISO(newDate)-parseISO(iso))/86400000);
+        item.shifts = item.shifts || [];
+        item.shifts.push({from: iso, delta: daysBetween(parseISO(iso), parseISO(newDate))});
       }
     }
   }
@@ -1213,7 +1432,7 @@ function openRecurring(){
         <svg class="drag-handle" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="15" cy="18" r="1.3"/></svg>
         <div class="rec-main">
           <div class="rec-name">${esc(r.name)}</div>
-          <div class="rec-meta">${r.cadence}${r.variable?' · variable':''}${!r.active?' · inactive':''}</div>
+          <div class="rec-meta">${r.cadence}${r.timing==='spread'?' · across the week':''}${r.variable?' · adjustable':''}${r.endDate?` · ${parseISO(r.endDate) < nowSydney() ? 'ended' : 'ends'} ${fmtShortDate(parseISO(r.endDate))}`:''}${!r.active?' · inactive':''}</div>
         </div>
         <div class="rec-amt ${r.kind==='income'?'income':''}">${fmtMoney(r.amount)}</div>
         <button class="rec-edit-btn" onclick="openRecItemForm('${r.id}')">
@@ -1242,6 +1461,8 @@ function openRecItemForm(id){
   document.getElementById('ri-amount').value = item?item.amount:'';
   document.getElementById('ri-anchor').value = item?item.anchorDate:state.settings.startDate;
   document.getElementById('ri-variable').checked = item?item.variable:false;
+  document.getElementById('ri-timing').value = item?(item.timing||'date'):'date';
+  document.getElementById('ri-end').value = item?(item.endDate||''):'';
   document.getElementById('ri-delete-btn').style.display = item ? 'block' : 'none';
   showModal('recitem-modal');
 }
@@ -1255,13 +1476,16 @@ function saveRecItem(){
     cadence: document.getElementById('ri-cadence').value,
     amount: parseFloat(document.getElementById('ri-amount').value)||0,
     anchorDate: document.getElementById('ri-anchor').value || state.settings.startDate,
-    variable: document.getElementById('ri-variable').checked
+    variable: document.getElementById('ri-variable').checked,
+    timing: document.getElementById('ri-timing').value,
+    endDate: document.getElementById('ri-end').value || null
   };
+  if(data.endDate && data.endDate < data.anchorDate){ toast('End date is before the first occurrence'); return; }
   if(id){
     const item = state.recurring.find(r=>r.id===id);
     Object.assign(item, data);
   } else {
-    state.recurring.push({id:'r'+Math.random().toString(36).slice(2,9), active:true, ...data});
+    state.recurring.push({id:'r'+Math.random().toString(36).slice(2,9), active:true, shifts:[], exceptions:[], ...data});
   }
   closeModal('recitem-modal');
   persist();
@@ -1271,6 +1495,12 @@ function deleteRecItem(){
   const id = document.getElementById('ri-id').value;
   if(!id) return;
   state.recurring = state.recurring.filter(r=>r.id!==id);
+  // Clean up per-week edits that pointed at the deleted item
+  Object.values(state.weeks).forEach(b=>{
+    if(b.overrides) delete b.overrides[id];
+    if(b.skipped) b.skipped = b.skipped.filter(x=>x!==id);
+    if(b.order) b.order = b.order.filter(x=>x!==id);
+  });
   closeModal('recitem-modal');
   persist();
   openRecurring();
@@ -1356,7 +1586,9 @@ function importJSON(evt){
   const reader = new FileReader();
   reader.onload = () => {
     try{
-      const data = JSON.parse(reader.result);
+      const data = normalizeState(JSON.parse(reader.result));
+      if(!data){ toast("That file doesn't look like a budget backup"); return; }
+      if(!confirm('Replace all current budget data with this backup?')) return;
       state = data;
       openWeeks.clear();
       persist();
@@ -1420,13 +1652,14 @@ async function pullFromGitHub(showFeedback){
       if(showFeedback) toast(ok ? 'Created budget-data.json in your repo' : `Sync failed — ${lastSyncError}`);
       return;
     }
-    if(res.status===401){ syncDotUpdate('err'); if(showFeedback) toast('Sync failed (401) — token is invalid, check Settings'); return; }
+    if(res.status===401){ syncDotUpdate('err'); if(showFeedback) toast('Sync failed (401) — token expired or revoked, make a new one and paste it in Settings'); return; }
     if(res.status===403){ syncDotUpdate('err'); if(showFeedback) toast('Sync failed (403) — token lacks access to this repo'); return; }
     if(!res.ok) throw new Error(res.status+' '+res.statusText);
     const data = await res.json();
     currentSha = data.sha;
     localStorage.setItem('budget_gh_sha', currentSha);
-    const remote = JSON.parse(b64DecodeUnicode(data.content));
+    const remote = normalizeState(JSON.parse(b64DecodeUnicode(data.content)));
+    if(!remote) throw new Error('remote budget-data.json is not valid budget data');
     // A fresh browser/origin always generates a brand-new default state stamped "now" —
     // that will always look newer than genuinely-old remote data by timestamp alone, so on
     // a device that has never synced before, the remote is trusted unconditionally.
@@ -1435,6 +1668,12 @@ async function pullFromGitHub(showFeedback){
       openWeeks.clear();
       saveLocal();
       render();
+    } else if(!remote.updatedAt || state.updatedAt > remote.updatedAt){
+      // This device has newer data than GitHub (e.g. edits made while sync was failing) — upload
+      // it now rather than waiting for the next edit.
+      const ok = await pushToGitHub(false);
+      if(showFeedback) toast(ok ? 'Uploaded your latest changes to GitHub' : `Sync failed — ${lastSyncError}`);
+      return;
     }
     syncDotUpdate('ok');
     if(showFeedback) toast('Synced with GitHub');
@@ -1581,6 +1820,12 @@ function commitDragOrder(item, itemSelector){
 
 // ───────────────────────── INIT ─────────────────────────
 function init(){
+  // Persist any schema migration done at load, without bumping updatedAt (so it doesn't look
+  // like a newer edit than GitHub's copy).
+  try{ localStorage.setItem('budget_state', JSON.stringify(state)); }catch(e){}
+  // Re-render when the app comes back to the foreground, so "This week" rolls over on Mondays
+  // even if the home-screen app was left open in the background.
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') render(); });
   render();
   renderVersionInfo();
   syncDotUpdate();
