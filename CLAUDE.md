@@ -31,39 +31,56 @@ state = {
   schemaVersion, updatedAt,
   settings: { startDate:'2026-08-17' (fixed), initialSavings, weeksToShow (from This week), chartRange, chartEndDate },
   recurring: [{ id, name, kind:'income'|'expense', cadence:'weekly'|'fortnightly'|'monthly'|'quarterly'|'yearly',
-                amount, variable (= "adjustable per week"), anchorDate, endDate|null, timing:'date'|'spread', active,
+                amount (base standard, per occurrence), amountHistory:[{week, amount}] ("from week N on" standard changes),
+                anchorDate, endDate|null, timing:'date'|'spread', active,
+                variable (legacy, ignored since v2.1 — every item can be changed per week),
                 shifts:[{from, delta}]           // "move all future occurrences", applied in order
                 exceptions:[{date,newDate,scope:'single'}] }], // "move just this occurrence"
   weeks: { [idx]: { oneOffs:[{id,name,amount,kind,date|null}], overrides:{itemId|'_rollover': amt},
-                    skipped:[itemId], order:[id], confirmed?:true } }
+                    skipped:[itemId], done:[id] (ticked paid/received), order:[id], confirmed?:true } }
 }
 ```
 Week `idx` counts weeks from the fixed start date, Mon 17 Aug 2026 (week 0).
 
-## Money model (`computeWeek`)
-- `carriedOver` = previous week's `endBalance` (week 0: `initialSavings`). It can be overridden through
-  `overrides._rollover`; week 0's override is how the real starting balance is set.
-- Income / Expenses are only the week's real flows. `savings = income − expenses` (that week's net).
-  `endBalance = carriedOver + savings`.
-- Recurring amount for the week = override if one is set, otherwise `amount × number of occurrences that week`.
-  Adjustable items always default to the standard amount. **No averaging and no avg/budget hints,
-  by design.**
-- Fixed (non-adjustable) recurring items are locked in week cards; they can only be skipped.
+## Money model (`computeWeek`): input → output → remainder
+- **Income box = input**: `carriedOver` (previous week's remainder, or `initialSavings` for week 0,
+  overridable through `overrides._rollover`) plus that week's income. `incomeTotal` includes the carried amount.
+- **Expenses box = output.** **Savings box = remainder** = `incomeTotal − expenseTotal` = `endBalance`,
+  which carries into the next week. Purple, always. `net` (income − expenses without the carry) is
+  only used for the summary's "accrued" figure.
+- The recurring amount for a week = the override if set, otherwise `standardAmount(item, idx) × occurrences that week`.
+  `standardAmount` uses `amountHistory`. "This week and all future weeks" (and changing the amount
+  in Recurring items) calls `setStandardFrom(item, week)` and clears that item's overrides from that week on.
+  **Past weeks are never rewritten.** No averaging and no avg/budget hints, by design.
+- A remainder below $0 is allowed while planning but flagged: a red "Short $X" pill, a note in the
+  Savings box, and a banner on the summary pointing to the first short week (from This week on).
+- Ticks (`done`) mark items paid or received. "In hand now" = carried + ticked income − ticked
+  expenses. This should match the bank balance mid-week. If it doesn't, the user edits the carried-over line.
 - Undated one-offs count on the **Sunday** of their week.
-- `timing:'spread'` items (e.g. Spending, a weekly budget not tied to a day) are drawn on the chart as
-  a straight-line daily drawdown across their week, and appear as an "Across this week" strip in the calendar.
-- Status: `projected` (no edits) → `planned` (any override/one-off/skip) → `confirmed` (user tapped
-  Confirm week). Editing a confirmed week keeps it confirmed. The user changes plans often, so don't nag.
+- `timing:'spread'` items (e.g. Spending) count 1/7 per day on the chart, and appear as an "Across this
+  week" strip in the calendar.
+- Status: `projected` (no edits) → `planned` (any override/one-off/skip/tick) → `confirmed` (user
+  tapped Confirm week). Editing a confirmed week keeps it confirmed. The user changes plans often, so don't nag.
 
 ## UI behaviour
 - Home starts at **This week**. Past weeks sit behind a collapsed "Show N past weeks" toggle
   (newest first, still editable). Rolling planning window: `HORIZON_WEEKS` (26) from This week onward.
-- The week card header shows Saved (net) and Balance (end of week). The body has a Carried over line,
-  Income / Expenses boxes with their totals in the header row, and a Savings box with only a header row.
+- The week card header shows "Left" (the remainder). The body has the Income box (carried-over line
+  first, then recurring items, then a "One-offs" sub-group), Expenses (recurring, then one-offs),
+  a header-only purple Savings box, then a two-line add row (amount + name / type, date, Add) and Confirm week.
+- Row: drag handle · tick · name + amount · ✕ (skip for recurring items, remove for one-offs).
+  **Tapping a row opens the edit sheet** (`openLineEditor`). There is no inline $ editing. A recurring item
+  changed for that week shows a subtle purple dot. Reset lives in the sheet, not on the row.
+  Skipped items show a "Restore" link. Each sub-group is its own drag container.
+- Undo: `persist()` pushes the previous snapshot onto an in-memory stack (this session only, 50 deep).
+  Header button, plus an Undo link on the toast after deleting or skipping. UI-only changes use
+  `persist({undo:false})`.
 - No date tags under line items; dates are shown in the calendar.
-- Tap a one-off's name to edit it (name/type/amount/date). Changing the date moves it to the right week.
-- Chart: one dot per day (same-day items grouped, and the tooltip lists them all). The line is dashed
-  for projected weeks.
+- Chart (`buildTimeline` + `drawChart`, drawn in real pixel units so dots stay round): solid grey line
+  through planned/confirmed weeks, dashed through projected. One dot per day: green = income,
+  red = expense, split green|red = both. Dot size scales with zoom. Tapping the summary chart
+  opens the interactive timeline (whole history + window, pinch/−/+ zoom down to day labels, tap a
+  dot for a pop-up listing that day's items and the savings after).
 - Drag-reorder through a single delegated `pointerdown` handler. iOS needs the non-passive
   `pointermove` with `preventDefault()` (see v1.4.2).
 
@@ -74,9 +91,12 @@ Week `idx` counts weeks from the fixed start date, Mon 17 Aug 2026 (week 0).
 - Start date is fixed and not editable.
 
 ## Backlog / ideas
+- **Dynamic "live week" workflow (in progress, keep brainstorming with the user).** Before v2.1 the
+  user's workaround was to delete income once received, fold it into the carried savings, and delete
+  expenses as they were paid, so the savings figure tracked reality. v2.1's ticks plus "In hand now"
+  are the first pass at replacing that. Get feedback before going further (e.g. a reconcile-to-bank
+  action, or auto-ticking dated items once their day has passed).
 - Spending insights from past weeks (archived weeks are kept for this). The user will think about
-  how to review "planned vs actual" for adjustable items. Note that overrides overwrite the plan,
-  so there's no record yet of the original planned amount versus what was actually spent.
-- The savings chart has been generally confusing (logged in v1.4.0). v2.0.0's money model and
-  spread drawdown should help; revisit once the user has used it.
+  how to review "planned vs actual". Per-week overrides overwrite the plan, so there's no record yet of
+  the original planned amount versus what was actually spent.
 - Possibly a fuller "confirm" workflow later. It must stay flexible to on-the-fly changes.
